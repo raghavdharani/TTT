@@ -3,6 +3,7 @@ import Board from './components/Board'
 import GameStatus from './components/GameStatus'
 import NewGameButton from './components/NewGameButton'
 import Help from './components/Help'
+import GameSetup from './components/GameSetup'
 import { calculateWinner, checkDraw } from './utils/gameLogic'
 
 const TOKEN_LIMIT = 3
@@ -40,6 +41,18 @@ const isAdjacent = (sourceIndex, targetIndex) => {
 }
 
 function App() {
+  // Game setup state
+  const [showSetup, setShowSetup] = useState(true)
+  const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
+  const [seriesStartingPlayer, setSeriesStartingPlayer] = useState(null) // 'X' or 'O'
+  
+  // Series state
+  const [currentGame, setCurrentGame] = useState(1)
+  const [xWins, setXWins] = useState(0)
+  const [oWins, setOWins] = useState(0)
+  const [seriesWinner, setSeriesWinner] = useState(null)
+  
+  // Game state
   const [squares, setSquares] = useState(Array(9).fill(null))
   const [xIsNext, setXIsNext] = useState(true)
   const [winner, setWinner] = useState(null)
@@ -52,6 +65,29 @@ function App() {
   const isRelocating = tokenToMoveIndex !== null
   const canPlaceNewToken = currentPlayerTokenCount < TOKEN_LIMIT
 
+  const checkSeriesWinner = (xWins, oWins, gameMode, totalGamesPlayed) => {
+    if (gameMode === 1) {
+      // Single game - winner is determined by the game itself
+      return null
+    }
+    
+    const neededWins = Math.ceil(gameMode / 2) // 2 for best of 3, 3 for best of 5
+    if (xWins >= neededWins) {
+      return 'X'
+    }
+    if (oWins >= neededWins) {
+      return 'O'
+    }
+    
+    // Check if series is over (all games played)
+    if (totalGamesPlayed >= gameMode) {
+      if (xWins > oWins) return 'X'
+      if (oWins > xWins) return 'O'
+      return 'draw'
+    }
+    return null
+  }
+
   const finalizeMove = (updatedSquares) => {
     setSquares(updatedSquares)
 
@@ -60,6 +96,25 @@ function App() {
       setWinner(gameWinner)
       setGameOver(true)
       setTokenToMoveIndex(null)
+      
+      // Update series wins
+      if (gameWinner === 'X') {
+        const newXWins = xWins + 1
+        setXWins(newXWins)
+        const totalGames = newXWins + oWins
+        const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, totalGames)
+        if (seriesWin) {
+          setSeriesWinner(seriesWin)
+        }
+      } else if (gameWinner === 'O') {
+        const newOWins = oWins + 1
+        setOWins(newOWins)
+        const totalGames = xWins + newOWins
+        const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, totalGames)
+        if (seriesWin) {
+          setSeriesWinner(seriesWin)
+        }
+      }
       return
     }
 
@@ -67,6 +122,13 @@ function App() {
       setWinner('draw')
       setGameOver(true)
       setTokenToMoveIndex(null)
+      
+      // Check if series is over after draw
+      const totalGames = xWins + oWins + 1
+      const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, totalGames)
+      if (seriesWin) {
+        setSeriesWinner(seriesWin)
+      }
       return
     }
 
@@ -132,12 +194,62 @@ function App() {
     finalizeMove(newSquares)
   }
 
-  const handleReset = () => {
+  const handleGameStart = (mode, startingPlayer) => {
+    setGameMode(mode)
+    setSeriesStartingPlayer(startingPlayer)
+    setShowSetup(false)
+    setCurrentGame(1)
+    setXWins(0)
+    setOWins(0)
+    setSeriesWinner(null)
+    startNewGame(startingPlayer)
+  }
+
+  const startNewGame = (startingPlayer) => {
     setSquares(Array(9).fill(null))
-    setXIsNext(true)
+    setXIsNext(startingPlayer === 'X')
     setWinner(null)
     setGameOver(false)
     setTokenToMoveIndex(null)
+  }
+
+  const handleNextGame = () => {
+    if (seriesWinner || (gameMode === 1 && gameOver)) {
+      // Series is over, or single game is over - go back to setup
+      setShowSetup(true)
+      setGameMode(null)
+      setSeriesStartingPlayer(null)
+      setCurrentGame(1)
+      setXWins(0)
+      setOWins(0)
+      setSeriesWinner(null)
+    } else {
+      // Continue series - alternate starting player
+      // After game 1 (odd): next game should start with opposite
+      // After game 2 (even): next game should start with original
+      // So: if currentGame is odd, next uses opposite; if even, next uses original
+      const nextGameNumber = currentGame + 1
+      const shouldStartWithOriginal = nextGameNumber % 2 === 1
+      const nextStartingPlayer = shouldStartWithOriginal 
+        ? seriesStartingPlayer 
+        : (seriesStartingPlayer === 'X' ? 'O' : 'X')
+      
+      setCurrentGame(nextGameNumber)
+      startNewGame(nextStartingPlayer)
+    }
+  }
+
+  const handleReset = () => {
+    // Reset current game only
+    startNewGame(xIsNext ? 'X' : 'O')
+  }
+
+  if (showSetup) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <GameSetup onStart={handleGameStart} />
+      </div>
+    )
   }
 
   return (
@@ -163,6 +275,11 @@ function App() {
           canPlaceNewToken={canPlaceNewToken}
           currentPlayerTokenCount={currentPlayerTokenCount}
           tokenLimit={TOKEN_LIMIT}
+          gameMode={gameMode}
+          currentGame={currentGame}
+          xWins={xWins}
+          oWins={oWins}
+          seriesWinner={seriesWinner}
         />
         <Board
           squares={squares}
@@ -175,7 +292,13 @@ function App() {
           canTokenMove={canTokenMove}
           isAdjacent={isAdjacent}
         />
-        <NewGameButton onReset={handleReset} />
+        <NewGameButton
+          onReset={handleReset}
+          onNextGame={handleNextGame}
+          gameOver={gameOver}
+          seriesWinner={seriesWinner}
+          gameMode={gameMode}
+        />
       </div>
       <Help isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </div>

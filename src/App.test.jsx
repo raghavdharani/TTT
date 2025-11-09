@@ -8,19 +8,47 @@ describe('App Component', () => {
       btn.getAttribute('aria-label')?.includes('square')
     )
 
-  test('renders game title', () => {
+  const startGame = async (user, gameMode = 1, startingPlayer = 'X') => {
+    // Select game mode
+    const modeText = gameMode === 1 ? '1 Game' : gameMode === 3 ? 'Best of 3' : 'Best of 5'
+    const modeButton = screen.getByText(modeText)
+    await user.click(modeButton)
+
+    // Select starting player
+    const playerText = startingPlayer === 'X' ? 'X (Cross)' : 'O (Circle)'
+    const playerButton = screen.getByText(playerText)
+    await user.click(playerButton)
+
+    // Click Start Game
+    const startButton = screen.getByRole('button', { name: /start game/i })
+    await user.click(startButton)
+  }
+
+  test('renders game setup screen initially', () => {
     render(<App />)
+    expect(screen.getByText('Game Setup')).toBeInTheDocument()
+    expect(screen.getByText('Select Game Mode:')).toBeInTheDocument()
+    expect(screen.getByText('Who goes first?')).toBeInTheDocument()
+  })
+
+  test('renders game title after setup', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await startGame(user)
     expect(screen.getByText('Tic Tac Toe')).toBeInTheDocument()
   })
 
-  test('displays initial state correctly', () => {
+  test('displays initial state correctly after setup', async () => {
+    const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
     expect(screen.getByText('Current Player: X (0/3 tokens)')).toBeInTheDocument()
   })
 
   test('allows players to make moves', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -39,6 +67,7 @@ describe('App Component', () => {
   test('detects X wins', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -49,12 +78,13 @@ describe('App Component', () => {
     await user.click(squares[4]) // O
     await user.click(squares[2]) // X wins!
 
-    expect(screen.getByText('Player X Wins!')).toBeInTheDocument()
+    expect(screen.getByText('Player X Wins This Game!')).toBeInTheDocument()
   })
 
   test('detects O wins', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -66,12 +96,13 @@ describe('App Component', () => {
     await user.click(squares[5]) // X
     await user.click(squares[6]) // O wins!
 
-    expect(screen.getByText('Player O Wins!')).toBeInTheDocument()
+    expect(screen.getByText('Player O Wins This Game!')).toBeInTheDocument()
   })
 
   test('allows token relocation at any time to adjacent squares', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -100,6 +131,7 @@ describe('App Component', () => {
   test('enforces token limit for new placements', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -130,6 +162,7 @@ describe('App Component', () => {
   test('placing token in same location does not count as a turn and allows another move', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -170,6 +203,7 @@ describe('App Component', () => {
   test('can pick up same token again after placing it back', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -210,6 +244,7 @@ describe('App Component', () => {
   test('prevents moving token to non-adjacent square', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -246,6 +281,7 @@ describe('App Component', () => {
   test('disables tokens that cannot move', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -266,6 +302,7 @@ describe('App Component', () => {
   test('reset button clears the board', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -289,6 +326,7 @@ describe('App Component', () => {
   test('prevents moves after game ends', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -308,6 +346,7 @@ describe('App Component', () => {
   test('prevents clicking occupied squares when under the token limit', async () => {
     const user = userEvent.setup()
     render(<App />)
+    await startGame(user)
 
     let squares = getSquares()
 
@@ -317,6 +356,129 @@ describe('App Component', () => {
     squares = getSquares()
 
     expect(squares[0]).toHaveTextContent('X') // Should still be X
+  })
+
+  test('tracks series wins for best of 3', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await startGame(user, 3, 'X')
+
+    let squares = getSquares()
+
+    // Game 1: X wins
+    await user.click(squares[0]) // X
+    await user.click(squares[3]) // O
+    await user.click(squares[1]) // X
+    await user.click(squares[4]) // O
+    await user.click(squares[2]) // X wins!
+
+    expect(screen.getByText(/Best of 3 - Game 1: X: 1 \| O: 0/)).toBeInTheDocument()
+    expect(screen.getByText('Player X Wins This Game!')).toBeInTheDocument()
+
+    // Click Next Game
+    const nextGameButton = screen.getByRole('button', { name: /next game/i })
+    await user.click(nextGameButton)
+
+    // Game 2: O should start (alternating)
+    squares = getSquares()
+    expect(screen.getByText(/Best of 3 - Game 2: X: 1 \| O: 0/)).toBeInTheDocument()
+    expect(screen.getByText(/Current Player: O/)).toBeInTheDocument()
+
+    // O wins game 2
+    await user.click(squares[0]) // O
+    await user.click(squares[3]) // X
+    await user.click(squares[1]) // O
+    await user.click(squares[4]) // X
+    await user.click(squares[2]) // O wins!
+
+    expect(screen.getByText(/Best of 3 - Game 2: X: 1 \| O: 1/)).toBeInTheDocument()
+
+    // Click Next Game
+    await user.click(screen.getByRole('button', { name: /next game/i }))
+
+    // Game 3: X should start again (alternating)
+    expect(screen.getByText(/Best of 3 - Game 3: X: 1 \| O: 1/)).toBeInTheDocument()
+    expect(screen.getByText(/Current Player: X/)).toBeInTheDocument()
+  })
+
+  test('determines series winner when player reaches needed wins', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await startGame(user, 3, 'X')
+
+    let squares = getSquares()
+
+    // Game 1: X wins
+    await user.click(squares[0]) // X
+    await user.click(squares[3]) // O
+    await user.click(squares[1]) // X
+    await user.click(squares[4]) // O
+    await user.click(squares[2]) // X wins!
+
+    // Click Next Game
+    await user.click(screen.getByRole('button', { name: /next game/i }))
+
+    // Game 2: X wins again (wins series)
+    squares = getSquares()
+    await user.click(squares[0]) // X
+    await user.click(squares[3]) // O
+    await user.click(squares[1]) // X
+    await user.click(squares[4]) // O
+    await user.click(squares[2]) // X wins series!
+
+    expect(screen.getByText('Player X Wins the Series!')).toBeInTheDocument()
+    expect(screen.getByText(/Series Winner: Player X wins 2-0!/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /new series/i })).toBeInTheDocument()
+  })
+
+  test('alternates starting player between games', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await startGame(user, 3, 'X')
+
+    let squares = getSquares()
+
+    // Game 1: X starts
+    expect(screen.getByText(/Current Player: X/)).toBeInTheDocument()
+    await user.click(squares[0]) // X
+    await user.click(squares[3]) // O
+    await user.click(squares[1]) // X
+    await user.click(squares[4]) // O
+    await user.click(squares[2]) // X wins
+
+    // Next game: O should start
+    await user.click(screen.getByRole('button', { name: /next game/i }))
+    expect(screen.getByText(/Current Player: O/)).toBeInTheDocument()
+
+    squares = getSquares()
+    await user.click(squares[0]) // O
+    await user.click(squares[3]) // X
+    await user.click(squares[1]) // O
+    await user.click(squares[4]) // X
+    await user.click(squares[2]) // O wins
+
+    // Next game: X should start again
+    await user.click(screen.getByRole('button', { name: /next game/i }))
+    expect(screen.getByText(/Current Player: X/)).toBeInTheDocument()
+  })
+
+  test('returns to setup screen after single game ends', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await startGame(user, 1, 'X')
+
+    let squares = getSquares()
+
+    // X wins
+    await user.click(squares[0]) // X
+    await user.click(squares[3]) // O
+    await user.click(squares[1]) // X
+    await user.click(squares[4]) // O
+    await user.click(squares[2]) // X wins!
+
+    // Click New Game (should return to setup)
+    await user.click(screen.getByRole('button', { name: /new game/i }))
+    expect(screen.getByText('Game Setup')).toBeInTheDocument()
   })
 })
 

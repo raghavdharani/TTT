@@ -1,4 +1,37 @@
-function NewGameButton({ onReset }) {
+function NewGameButton({ onReset, onNextGame, gameOver, seriesWinner, gameMode }) {
+  const handleClick = () => {
+    if (seriesWinner) {
+      // Series is over, go back to setup
+      if (onNextGame) {
+        onNextGame()
+      }
+    } else if (gameOver && onNextGame && gameMode && gameMode > 1) {
+      // Game over in a series, continue to next game
+      onNextGame()
+    } else if (gameOver && gameMode === 1) {
+      // Single game over, go back to setup
+      if (onNextGame) {
+        onNextGame()
+      }
+    } else if (onReset) {
+      // Reset current game
+      onReset()
+    }
+  }
+
+  const getButtonText = () => {
+    if (seriesWinner) {
+      return 'New Series'
+    }
+    if (gameOver && gameMode && gameMode > 1) {
+      return 'Next Game'
+    }
+    if (gameOver && gameMode === 1) {
+      return 'New Game'
+    }
+    return 'New Game'
+  }
+
   return (
     <button
       className="
@@ -10,10 +43,10 @@ function NewGameButton({ onReset }) {
         transition-colors duration-150
         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
       "
-      onClick={onReset}
-      aria-label="Start a new game"
+      onClick={handleClick}
+      aria-label={getButtonText()}
     >
-      New Game
+      {getButtonText()}
     </button>
   )
 }
