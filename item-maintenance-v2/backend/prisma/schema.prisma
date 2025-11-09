@@ -1,0 +1,30 @@
+// Prisma Schema for Item Maintenance V2
+// Note: This schema includes new tables only
+// Existing KWI tables (articles, artven, artvc, coll, types, patterns) are not modified
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or "sqlserver" depending on KWI database
+  url      = env("DATABASE_URL")
+}
+
+// Search Sessions table for saved search configurations
+model SearchSession {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  searchQuery  String?  @db.Text
+  filters       Json?   // Store filters as JSON
+  sortConfig   Json?    // Store sort configuration as JSON
+  columnConfig Json?    // Store column configuration as JSON
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("search_sessions")
+}
+

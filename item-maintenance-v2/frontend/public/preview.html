@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Maintenance V2 - UI Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header Bar -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4">
+            <!-- Breadcrumb -->
+            <nav class="mb-3 text-sm">
+                <ol class="flex items-center space-x-2">
+                    <li><a href="#" class="text-gray-600 hover:text-[#1976D2]">Home</a></li>
+                    <li class="text-gray-400">/</li>
+                    <li><a href="#" class="text-gray-600 hover:text-[#1976D2]">Merchandising</a></li>
+                    <li class="text-gray-400">/</li>
+                    <li class="text-gray-900">Item Maintenance</li>
+                </ol>
+            </nav>
+
+            <!-- Header Content -->
+            <div class="flex items-center justify-between gap-4">
+                <h1 class="text-gray-900 text-xl font-semibold flex-shrink-0">Item Maintenance</h1>
+                
+                <!-- Search Bar -->
+                <div class="relative flex-1 max-w-2xl">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search by SKU, UPC, or description..."
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:border-[#1976D2] focus:ring-2 focus:ring-[#1976D2] focus:outline-none"
+                        value=""
+                    />
+                </div>
+
+                <!-- Filter Toggle -->
+                <button class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 bg-blue-50 border-[#1976D2]">
+                    <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex">
+        <!-- Filter Panel -->
+        <aside class="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm">
+            <!-- Filter Header -->
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-gray-900 font-semibold">Filters</h2>
+                <button class="p-1 rounded-lg hover:bg-gray-100">
+                    <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Filter Content -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                <!-- Item Details Section -->
+                <div class="border rounded-lg px-3 py-2">
+                    <div class="flex items-center justify-between py-2">
+                        <h3 class="text-gray-900 font-medium">Item Details</h3>
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="space-y-3 pb-3">
+                        <div>
+                            <label class="text-sm text-gray-700 block mb-1">SKU/UPC</label>
+                            <input type="text" placeholder="Enter SKU or UPC" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-700 block mb-1">Description</label>
+                            <input type="text" placeholder="Enter description" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hierarchy Section -->
+                <div class="border rounded-lg px-3 py-2">
+                    <div class="flex items-center justify-between py-2">
+                        <h3 class="text-gray-900 font-medium">Hierarchy</h3>
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="space-y-3 pb-3">
+                        <div>
+                            <label class="text-sm text-gray-700 block mb-1">Department</label>
+                            <select class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm">
+                                <option>Select department</option>
+                                <option>Department 01</option>
+                                <option>Department 02</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Actions -->
+            <div class="p-4 border-t border-gray-200 space-y-2">
+                <button class="w-full py-2 px-4 rounded-lg bg-[#1976D2] text-white hover:bg-[#1565C0] font-medium">
+                    Apply Filters
+                </button>
+                <button class="w-full py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 font-medium">
+                    Reset
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <div class="p-6">
+                <!-- Search and Controls Row -->
+                <div class="mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="relative flex-1 max-w-2xl">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Search by SKU, UPC, or description..."
+                                class="w-full pl-10 pr-20 py-2 rounded-lg border border-gray-300 focus:border-[#1976D2] focus:ring-2 focus:ring-[#1976D2] focus:outline-none"
+                            />
+                            <button class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-sm bg-[#1976D2] text-white rounded hover:bg-[#1565C0]">
+                                Search
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">Sort by:</label>
+                            <select class="px-3 py-2 rounded-lg border border-gray-300 text-sm">
+                                <option>Relevance</option>
+                                <option>Last Modified</option>
+                                <option>Price</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
+                        Saved Searches
+                    </button>
+                </div>
+
+                <!-- Active Filters -->
+                <div class="mb-4 p-4 bg-gray-50 border-b border-gray-200">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <span class="text-sm text-gray-600 mr-2">Active Filters:</span>
+                        <span class="px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-sm flex items-center gap-1">
+                            Department: 01
+                            <button class="ml-1 hover:bg-gray-300 rounded-full p-0.5">
+                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Record Count -->
+                <div class="mb-4 p-4 bg-gray-50 border-b border-gray-200">
+                    <p class="text-gray-900">
+                        <span class="font-semibold">8</span> records found
+                    </p>
+                </div>
+
+                <!-- Results Grid -->
+                <div class="mt-4 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Style</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">UPC</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Description</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Vendor</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Retail Price</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Last Modified</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">ABC-123</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">123456789012</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Classic Cotton T-Shirt - Blue</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor A</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$29.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Nov 7, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">XYZ-456</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">234567890123</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Denim Jeans - Dark Wash</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor B</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$79.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Nov 5, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">DEF-789</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">345678901234</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Wool Sweater - Gray</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor A</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$89.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Oct 31, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">GHI-012</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">456789012345</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Silk Blouse - White</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor C</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$59.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Nov 6, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">JKL-345</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">567890123456</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Leather Jacket - Black</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor B</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$199.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Inactive</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Oct 24, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">MNO-678</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">678901234567</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Cotton Shorts - Khaki</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor A</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$39.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Nov 4, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">PQR-901</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">789012345678</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Cashmere Scarf - Red</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor C</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$49.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Nov 2, 2025</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">STU-234</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">890123456789</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Linen Pants - Beige</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Vendor B</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">$69.99</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">Oct 28, 2025</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
