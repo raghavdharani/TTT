@@ -257,7 +257,7 @@ function App() {
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="flex items-center justify-between w-full mb-6 sm:mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            Tic Tac Toe
+            Tic Tac Toe with a Twist
           </h1>
           <button
             onClick={() => setShowHelp(true)}
