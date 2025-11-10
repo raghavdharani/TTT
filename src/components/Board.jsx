@@ -10,11 +10,12 @@ function Board({
   tokenLimit,
   canTokenMove,
   isAdjacent,
+  isComputerTurn,
 }) {
   const isRelocating = tokenToMoveIndex !== null
 
   const isSquareEnabled = (value, index) => {
-    if (gameOver) {
+    if (gameOver || isComputerTurn) {
       return false
     }
 

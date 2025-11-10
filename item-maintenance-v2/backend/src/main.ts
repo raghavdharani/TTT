@@ -2,6 +2,9 @@
  * NestJS Application Bootstrap
  */
 
+import { config } from 'dotenv';
+config(); // Load environment variables from .env file
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';

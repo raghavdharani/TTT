@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Board from './components/Board'
 import GameStatus from './components/GameStatus'
 import NewGameButton from './components/NewGameButton'
 import Help from './components/Help'
 import GameSetup from './components/GameSetup'
 import { calculateWinner, checkDraw } from './utils/gameLogic'
+import { getComputerMove } from './utils/ai'
 
 const TOKEN_LIMIT = 3
 
@@ -43,6 +44,8 @@ const isAdjacent = (sourceIndex, targetIndex) => {
 function App() {
   // Game setup state
   const [showSetup, setShowSetup] = useState(true)
+  const [playMode, setPlayMode] = useState(null) // '2player' or 'computer'
+  const [difficulty, setDifficulty] = useState(null) // 'easy', 'hard', 'insane'
   const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
   const [seriesStartingPlayer, setSeriesStartingPlayer] = useState(null) // 'X' or 'O'
   
@@ -59,11 +62,16 @@ function App() {
   const [gameOver, setGameOver] = useState(false)
   const [tokenToMoveIndex, setTokenToMoveIndex] = useState(null)
   const [showHelp, setShowHelp] = useState(false)
+  const [isComputerThinking, setIsComputerThinking] = useState(false)
 
   const currentPlayer = xIsNext ? 'X' : 'O'
   const currentPlayerTokenCount = countTokens(squares, currentPlayer)
   const isRelocating = tokenToMoveIndex !== null
   const canPlaceNewToken = currentPlayerTokenCount < TOKEN_LIMIT
+  
+  // Determine if current player is computer
+  // In computer mode, the computer always plays as 'O'
+  const isComputerTurn = playMode === 'computer' && currentPlayer === 'O' && !gameOver
 
   const checkSeriesWinner = (xWins, oWins, gameMode, totalGamesPlayed) => {
     if (gameMode === 1) {
@@ -136,8 +144,49 @@ function App() {
     setTokenToMoveIndex(null)
   }
 
+  // Handle computer moves
+  useEffect(() => {
+    // Only run if it's computer's turn, not already thinking, not relocating, and game not over
+    if (!isComputerTurn || isComputerThinking || isRelocating || gameOver) {
+      return
+    }
+    
+    setIsComputerThinking(true)
+    
+    // Add a small delay to make the computer move feel more natural
+    const timer = setTimeout(() => {
+      const move = getComputerMove(squares, 'O', difficulty)
+      
+      if (move) {
+        if (move.type === 'place') {
+          // Place a new token
+          const newSquares = [...squares]
+          newSquares[move.to] = 'O'
+          finalizeMove(newSquares)
+        } else {
+          // Computer is moving a token - first pick it up
+          setTokenToMoveIndex(move.from)
+          const newSquares = [...squares]
+          newSquares[move.from] = null
+          setSquares(newSquares)
+          
+          // Then place it after a short delay
+          setTimeout(() => {
+            const finalSquares = [...newSquares]
+            finalSquares[move.to] = 'O'
+            finalizeMove(finalSquares)
+          }, 300)
+        }
+      }
+      
+      setIsComputerThinking(false)
+    }, 500) // 500ms delay for better UX
+    
+    return () => clearTimeout(timer)
+  }, [isComputerTurn, squares, difficulty, gameOver])
+
   const handleSquareClick = (index) => {
-    if (gameOver) {
+    if (gameOver || isComputerTurn) {
       return
     }
 
@@ -194,7 +243,9 @@ function App() {
     finalizeMove(newSquares)
   }
 
-  const handleGameStart = (mode, startingPlayer) => {
+  const handleGameStart = (newPlayMode, mode, startingPlayer, newDifficulty) => {
+    setPlayMode(newPlayMode)
+    setDifficulty(newDifficulty)
     setGameMode(mode)
     setSeriesStartingPlayer(startingPlayer)
     setShowSetup(false)
@@ -217,6 +268,8 @@ function App() {
     if (seriesWinner || (gameMode === 1 && gameOver)) {
       // Series is over, or single game is over - go back to setup
       setShowSetup(true)
+      setPlayMode(null)
+      setDifficulty(null)
       setGameMode(null)
       setSeriesStartingPlayer(null)
       setCurrentGame(1)
@@ -280,6 +333,8 @@ function App() {
           xWins={xWins}
           oWins={oWins}
           seriesWinner={seriesWinner}
+          isComputerTurn={isComputerTurn}
+          isComputerThinking={isComputerThinking}
         />
         <Board
           squares={squares}
@@ -291,6 +346,7 @@ function App() {
           tokenLimit={TOKEN_LIMIT}
           canTokenMove={canTokenMove}
           isAdjacent={isAdjacent}
+          isComputerTurn={isComputerTurn}
         />
         <NewGameButton
           onReset={handleReset}

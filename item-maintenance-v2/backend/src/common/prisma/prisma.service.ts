@@ -11,12 +11,19 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   async onModuleInit() {
+    // Skip database connection if DATABASE_URL is not set (using mock data)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('placeholder')) {
+      this.logger.warn('DATABASE_URL not configured - running in mock data mode');
+      return;
+    }
+    
     try {
       await this.$connect();
       this.logger.log('Database connection established');
     } catch (error) {
       this.logger.error('Failed to connect to database', error);
-      throw error;
+      this.logger.warn('Continuing in mock data mode');
+      // Don't throw - allow app to run with mock data
     }
   }
 
@@ -37,7 +44,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       // Prisma uses $1, $2 format for PostgreSQL
       // For SQL Server, might need different format
       const result = await this.$queryRawUnsafe<T>(query, ...params);
-      return result;
+      return result as T[];
     } catch (error) {
       this.logger.error('Database query error', error);
       throw error;

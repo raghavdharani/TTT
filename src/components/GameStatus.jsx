@@ -11,6 +11,8 @@ function GameStatus({
   xWins,
   oWins,
   seriesWinner,
+  isComputerTurn,
+  isComputerThinking,
 }) {
   const getSeriesInfo = () => {
     if (!gameMode || gameMode === 1) {
@@ -50,6 +52,12 @@ function GameStatus({
     }
     if (gameOver && winner === 'draw') {
       return "It's a Draw!"
+    }
+    if (isComputerTurn) {
+      if (isComputerThinking) {
+        return 'Computer is thinking...'
+      }
+      return "Computer's turn..."
     }
     if (isRelocating) {
       return `Player ${currentPlayer} is moving a token. Choose a new square.`

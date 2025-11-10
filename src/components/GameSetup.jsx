@@ -1,13 +1,18 @@
 import { useState } from 'react'
 
 function GameSetup({ onStart }) {
-  const [gameMode, setGameMode] = useState(null)
-  const [startingPlayer, setStartingPlayer] = useState(null)
+  const [playMode, setPlayMode] = useState(null) // '2player' or 'computer'
+  const [difficulty, setDifficulty] = useState(null) // 'easy', 'hard', 'insane' (only for computer mode)
+  const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
+  const [startingPlayer, setStartingPlayer] = useState(null) // 'X' or 'O'
   const [showHelp, setShowHelp] = useState(false)
 
   const handleStart = () => {
-    if (gameMode && startingPlayer) {
-      onStart(gameMode, startingPlayer)
+    if (playMode && gameMode && startingPlayer) {
+      if (playMode === 'computer' && !difficulty) {
+        return // Can't start without difficulty for computer mode
+      }
+      onStart(playMode, gameMode, startingPlayer, difficulty)
     }
   }
 
@@ -19,6 +24,79 @@ function GameSetup({ onStart }) {
       <p className="text-sm sm:text-base text-gray-600 mb-6 text-center">
         Move tokens, play series, and outsmart your opponent!
       </p>
+
+      {/* Play Mode Selection (2 Player vs VS Computer) */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Select Play Mode:
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => {
+              setPlayMode('2player')
+              setDifficulty(null) // Reset difficulty when switching modes
+            }}
+            className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+              playMode === '2player'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+            }`}
+          >
+            2 Player
+          </button>
+          <button
+            onClick={() => setPlayMode('computer')}
+            className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+              playMode === 'computer'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+            }`}
+          >
+            VS Computer
+          </button>
+        </div>
+      </div>
+
+      {/* Difficulty Selection (only shown for VS Computer) */}
+      {playMode === 'computer' && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Select Difficulty:
+          </label>
+          <div className="space-y-2">
+            <button
+              onClick={() => setDifficulty('easy')}
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-colors ${
+                difficulty === 'easy'
+                  ? 'border-green-500 bg-green-50 text-green-700'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              Easy
+            </button>
+            <button
+              onClick={() => setDifficulty('hard')}
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-colors ${
+                difficulty === 'hard'
+                  ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              Hard
+            </button>
+            <button
+              onClick={() => setDifficulty('insane')}
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-colors ${
+                difficulty === 'insane'
+                  ? 'border-red-500 bg-red-50 text-red-700'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              Insane
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Game Mode Selection */}
       <div className="mb-6">
@@ -201,7 +279,7 @@ function GameSetup({ onStart }) {
       {/* Start Button */}
       <button
         onClick={handleStart}
-        disabled={!gameMode || !startingPlayer}
+        disabled={!playMode || !gameMode || !startingPlayer || (playMode === 'computer' && !difficulty)}
         className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-150"
       >
         Start Game

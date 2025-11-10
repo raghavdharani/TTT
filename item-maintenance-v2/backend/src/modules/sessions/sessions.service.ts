@@ -20,14 +20,36 @@ export interface SearchSession {
 
 @Injectable()
 export class SessionsService {
+  private sessions: Map<string, SearchSession> = new Map();
+  private useMockData: boolean;
+
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-  ) {}
+  ) {
+    // Check if we should use mock data (no DATABASE_URL or placeholder)
+    this.useMockData = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('placeholder');
+  }
 
   /**
    * Create a new search session
    */
   async create(userId: string, sessionData: Partial<SearchSession>): Promise<SearchSession> {
+    if (this.useMockData) {
+      const session: SearchSession = {
+        id: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        userId,
+        name: sessionData.name || 'Untitled Search',
+        searchQuery: sessionData.searchQuery,
+        filters: sessionData.filters,
+        sortConfig: sessionData.sortConfig,
+        columnConfig: sessionData.columnConfig,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.sessions.set(session.id, session);
+      return session;
+    }
+
     const session = await this.prisma.searchSession.create({
       data: {
         userId,
@@ -45,6 +67,13 @@ export class SessionsService {
    * Get all sessions for a user
    */
   async findAll(userId: string): Promise<SearchSession[]> {
+    if (this.useMockData) {
+      const userSessions = Array.from(this.sessions.values())
+        .filter(s => s.userId === userId)
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      return userSessions;
+    }
+
     const sessions = await this.prisma.searchSession.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
@@ -56,6 +85,17 @@ export class SessionsService {
    * Get a single session by ID
    */
   async findOne(id: string, userId: string): Promise<SearchSession | null> {
+    if (this.useMockData) {
+      const session = this.sessions.get(id);
+      if (!session) {
+        return null;
+      }
+      if (session.userId !== userId) {
+        throw new ForbiddenException('You do not have access to this session');
+      }
+      return session;
+    }
+
     const session = await this.prisma.searchSession.findUnique({
       where: { id },
     });
@@ -79,6 +119,18 @@ export class SessionsService {
     const existing = await this.findOne(id, userId);
     if (!existing) {
       throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+    
+    if (this.useMockData) {
+      const session = this.sessions.get(id)!;
+      if (updates.name !== undefined) session.name = updates.name;
+      if (updates.searchQuery !== undefined) session.searchQuery = updates.searchQuery;
+      if (updates.filters !== undefined) session.filters = updates.filters;
+      if (updates.sortConfig !== undefined) session.sortConfig = updates.sortConfig;
+      if (updates.columnConfig !== undefined) session.columnConfig = updates.columnConfig;
+      session.updatedAt = new Date();
+      this.sessions.set(id, session);
+      return session;
     }
     
     const session = await this.prisma.searchSession.update({
@@ -106,6 +158,11 @@ export class SessionsService {
       throw new NotFoundException(`Session with ID ${id} not found`);
     }
     
+    if (this.useMockData) {
+      this.sessions.delete(id);
+      return;
+    }
+    
     await this.prisma.searchSession.delete({
       where: { id },
     });
@@ -115,6 +172,13 @@ export class SessionsService {
    * Get the last session for a user
    */
   async findLast(userId: string): Promise<SearchSession | null> {
+    if (this.useMockData) {
+      const userSessions = Array.from(this.sessions.values())
+        .filter(s => s.userId === userId)
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      return userSessions.length > 0 ? userSessions[0] : null;
+    }
+
     const session = await this.prisma.searchSession.findFirst({
       where: { userId },
       orderBy: { updatedAt: 'desc' },

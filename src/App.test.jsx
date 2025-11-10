@@ -8,16 +8,37 @@ describe('App Component', () => {
       btn.getAttribute('aria-label')?.includes('square')
     )
 
-  const startGame = async (user, gameMode = 1, startingPlayer = 'X') => {
+  const startGame = async (user, playMode = '2player', gameMode = 1, startingPlayer = 'X', difficulty = null) => {
+    // Select play mode
+    const playModeButton = screen.getByText(playMode === '2player' ? '2 Player' : 'VS Computer')
+    await user.click(playModeButton)
+
+    // If computer mode, select difficulty
+    if (playMode === 'computer' && difficulty) {
+      const difficultyButton = screen.getByText(difficulty.charAt(0).toUpperCase() + difficulty.slice(1))
+      await user.click(difficultyButton)
+    }
+
     // Select game mode
     const modeText = gameMode === 1 ? '1 Game' : gameMode === 3 ? 'Best of 3' : 'Best of 5'
     const modeButton = screen.getByText(modeText)
     await user.click(modeButton)
 
-    // Select starting player
-    const playerText = startingPlayer === 'X' ? 'X (Cross)' : 'O (Circle)'
-    const playerButton = screen.getByText(playerText)
-    await user.click(playerButton)
+    // Select starting player - look for SVG icons (X and O buttons)
+    // The buttons contain SVG icons, so we need to find them differently
+    const playerButtons = screen.getAllByRole('button').filter(btn => {
+      const svg = btn.querySelector('svg')
+      if (!svg) return false
+      // X has two lines, O has a circle
+      const hasLines = svg.querySelectorAll('line').length > 0
+      const hasCircle = svg.querySelector('circle') !== null
+      if (startingPlayer === 'X' && hasLines) return true
+      if (startingPlayer === 'O' && hasCircle) return true
+      return false
+    })
+    if (playerButtons.length > 0) {
+      await user.click(playerButtons[0])
+    }
 
     // Click Start Game
     const startButton = screen.getByRole('button', { name: /start game/i })
@@ -26,7 +47,8 @@ describe('App Component', () => {
 
   test('renders game setup screen initially', () => {
     render(<App />)
-    expect(screen.getByText('Game Setup')).toBeInTheDocument()
+    expect(screen.getByText('Tic Tac Toe with a Twist')).toBeInTheDocument()
+    expect(screen.getByText('Select Play Mode:')).toBeInTheDocument()
     expect(screen.getByText('Select Game Mode:')).toBeInTheDocument()
     expect(screen.getByText('Who goes first?')).toBeInTheDocument()
   })
@@ -35,7 +57,7 @@ describe('App Component', () => {
     const user = userEvent.setup()
     render(<App />)
     await startGame(user)
-    expect(screen.getByText('Tic Tac Toe')).toBeInTheDocument()
+    expect(screen.getByText('Tic Tac Toe with a Twist')).toBeInTheDocument()
   })
 
   test('displays initial state correctly after setup', async () => {
