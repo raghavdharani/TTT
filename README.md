@@ -1,6 +1,6 @@
-# Tic Tac Toe Game
+# ShiftTacToe
 
-A modern, responsive tic-tac-toe game built with React and Tailwind CSS.
+A modern, strategic twist on tic-tac-toe where you can shift and relocate your tokens. Built with React and Tailwind CSS.
 
 ## Features
 

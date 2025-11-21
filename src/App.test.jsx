@@ -47,7 +47,7 @@ describe('App Component', () => {
 
   test('renders game setup screen initially', () => {
     render(<App />)
-    expect(screen.getByText('Tic Tac Toe with a Twist')).toBeInTheDocument()
+    expect(screen.getByText('ShiftTacToe')).toBeInTheDocument()
     expect(screen.getByText('Select Play Mode:')).toBeInTheDocument()
     expect(screen.getByText('Select Game Mode:')).toBeInTheDocument()
     expect(screen.getByText('Who goes first?')).toBeInTheDocument()
@@ -57,7 +57,7 @@ describe('App Component', () => {
     const user = userEvent.setup()
     render(<App />)
     await startGame(user)
-    expect(screen.getByText('Tic Tac Toe with a Twist')).toBeInTheDocument()
+    expect(screen.getByText('ShiftTacToe')).toBeInTheDocument()
   })
 
   test('displays initial state correctly after setup', async () => {

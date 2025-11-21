@@ -7,7 +7,7 @@ function Square({ value, onClick, disabled, index }) {
     if (value === 'X') {
       return (
         <svg
-          className="animate-pulse w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"
+          className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -40,8 +40,7 @@ function Square({ value, onClick, disabled, index }) {
     if (value === 'O') {
       return (
         <svg
-          className="animate-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"
-          style={{ animationDuration: '3s' }}
+          className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

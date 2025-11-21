@@ -147,7 +147,7 @@ function App() {
   // Handle computer moves
   useEffect(() => {
     // Only run if it's computer's turn, not already thinking, not relocating, and game not over
-    if (!isComputerTurn || isComputerThinking || isRelocating || gameOver) {
+    if (!isComputerTurn || isComputerThinking || isRelocating || gameOver || !difficulty) {
       return
     }
     
@@ -155,18 +155,19 @@ function App() {
     
     // Add a small delay to make the computer move feel more natural
     const timer = setTimeout(() => {
-      const move = getComputerMove(squares, 'O', difficulty)
+      const currentSquares = squares // Capture current squares
+      const move = getComputerMove(currentSquares, 'O', difficulty)
       
       if (move) {
         if (move.type === 'place') {
           // Place a new token
-          const newSquares = [...squares]
+          const newSquares = [...currentSquares]
           newSquares[move.to] = 'O'
           finalizeMove(newSquares)
         } else {
           // Computer is moving a token - first pick it up
           setTokenToMoveIndex(move.from)
-          const newSquares = [...squares]
+          const newSquares = [...currentSquares]
           newSquares[move.from] = null
           setSquares(newSquares)
           
@@ -177,13 +178,14 @@ function App() {
             finalizeMove(finalSquares)
           }, 300)
         }
+      } else {
+        setIsComputerThinking(false)
       }
-      
-      setIsComputerThinking(false)
     }, 500) // 500ms delay for better UX
     
     return () => clearTimeout(timer)
-  }, [isComputerTurn, squares, difficulty, gameOver])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComputerTurn, isComputerThinking, isRelocating, gameOver, difficulty])
 
   const handleSquareClick = (index) => {
     if (gameOver || isComputerTurn) {
@@ -193,8 +195,24 @@ function App() {
     const valueAtIndex = squares[index]
     const newSquares = [...squares]
 
-    // If relocating, place token on empty adjacent square
+    // If relocating, handle placement or switching tokens
     if (isRelocating) {
+      // Allow switching to a different token of the same player
+      if (valueAtIndex === currentPlayer) {
+        // Check if this token can move before allowing relocation
+        if (!canTokenMove(squares, index)) {
+          return
+        }
+        
+        // Put the first token back and pick up the new one
+        newSquares[tokenToMoveIndex] = currentPlayer
+        newSquares[index] = null
+        setSquares(newSquares)
+        setTokenToMoveIndex(index)
+        return
+      }
+
+      // Can only place on empty squares
       if (valueAtIndex !== null) {
         return
       }
@@ -310,7 +328,7 @@ function App() {
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="flex items-center justify-between w-full mb-6 sm:mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            Tic Tac Toe with a Twist
+            ShiftTacToe
           </h1>
           <button
             onClick={() => setShowHelp(true)}

@@ -19,13 +19,17 @@ function Board({
       return false
     }
 
-    // When relocating, only empty adjacent squares are enabled (including the original location)
+    // When relocating, allow placing on empty adjacent squares OR switching to another token
     if (isRelocating) {
-      if (value !== null) {
-        return false
+      // Allow switching to a different token of the same player (if it can move)
+      if (value === currentPlayer) {
+        return canTokenMove(squares, index)
       }
-      // Enable if the square is adjacent to the token being moved OR it's the original location
-      return isAdjacent(tokenToMoveIndex, index) || index === tokenToMoveIndex
+      // Enable empty squares if adjacent to the token being moved OR it's the original location
+      if (value === null) {
+        return isAdjacent(tokenToMoveIndex, index) || index === tokenToMoveIndex
+      }
+      return false
     }
 
     // Empty squares are enabled if player can place new tokens
@@ -46,7 +50,7 @@ function Board({
     <div
       className="grid grid-cols-3 gap-2 w-full max-w-xs sm:max-w-sm md:max-w-md"
       role="grid"
-      aria-label="Tic-tac-toe game board"
+      aria-label="ShiftTacToe game board"
     >
       {squares.map((value, index) => {
         const enabled = isSquareEnabled(value, index)
