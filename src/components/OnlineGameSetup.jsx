@@ -12,19 +12,27 @@ function OnlineGameSetup({ onStart, onCancel }) {
   const [playerSymbol, setPlayerSymbol] = useState(null);
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [roomCreated, setRoomCreated] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(false);
 
   useEffect(() => {
     const sock = getSocket();
     setSocket(sock);
 
-    // Check connection status
+    // Check connection status and connect if not connected
     if (!sock.connected) {
       sock.connect();
     }
 
+    // Update connection status immediately
+    const updateConnectionStatus = () => {
+      // Force a re-render by updating state
+      setError((prev) => prev === 'Failed to connect to server. Make sure the server is running on port 3001.' && sock.connected ? null : prev);
+    };
+
     const handleConnect = () => {
       console.log('Socket connected');
       setError(null);
+      updateConnectionStatus();
     };
 
     const handleDisconnect = () => {
@@ -38,22 +46,28 @@ function OnlineGameSetup({ onStart, onCancel }) {
       console.error('Connection error:', err);
       setError('Failed to connect to server. Make sure the server is running on port 3001.');
       setIsConnecting(false);
+      // Retry connection after a delay
+      setTimeout(() => {
+        if (!sock.connected) {
+          sock.connect();
+        }
+      }, 2000);
     };
 
     sock.on('connect', handleConnect);
     sock.on('disconnect', handleDisconnect);
     sock.on('connect_error', handleConnectError);
 
-    sock.on('room-created', ({ roomId: createdRoomId, playerSymbol: symbol }) => {
+    const handleRoomCreated = ({ roomId: createdRoomId, playerSymbol: symbol }) => {
       setRoomId(createdRoomId);
       setPlayerSymbol(symbol);
       setRoomCreated(true);
       setWaitingForPlayer(true);
       setIsConnecting(false);
       setError(null);
-    });
+    };
 
-    sock.on('player-joined', ({ players: roomPlayers, gameState }) => {
+    const handlePlayerJoined = ({ players: roomPlayers, gameState }) => {
       const myPlayer = roomPlayers.find((p) => p.id === sock.id);
       if (myPlayer) {
         setPlayerSymbol(myPlayer.symbol);
@@ -64,13 +78,17 @@ function OnlineGameSetup({ onStart, onCancel }) {
       if (roomPlayers.length === 2) {
         sock.emit('player-ready');
       }
-    });
+    };
 
-    sock.on('error', ({ message }) => {
+    const handleError = ({ message }) => {
       setError(message);
       setIsConnecting(false);
       setWaitingForPlayer(false);
-    });
+    };
+
+    sock.on('room-created', handleRoomCreated);
+    sock.on('player-joined', handlePlayerJoined);
+    sock.on('error', handleError);
 
     const handleGameStart = ({ gameState, players: roomPlayers, gameMode: roomGameMode, startingPlayer: roomStartingPlayer }) => {
       // Game is starting - use room settings
@@ -86,9 +104,9 @@ function OnlineGameSetup({ onStart, onCancel }) {
       sock.off('connect', handleConnect);
       sock.off('disconnect', handleDisconnect);
       sock.off('connect_error', handleConnectError);
-      sock.off('room-created');
-      sock.off('player-joined');
-      sock.off('error');
+      sock.off('room-created', handleRoomCreated);
+      sock.off('player-joined', handlePlayerJoined);
+      sock.off('error', handleError);
       sock.off('game-start', handleGameStart);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,7 +168,33 @@ function OnlineGameSetup({ onStart, onCancel }) {
   }
 
   const currentSocket = socket || getSocket();
-  const isConnected = currentSocket?.connected;
+  
+  // Update connection status when socket state changes
+  useEffect(() => {
+    if (!currentSocket) {
+      setConnectionStatus(false);
+      return;
+    }
+    
+    const updateStatus = () => {
+      setConnectionStatus(currentSocket.connected);
+    };
+    
+    // Initial check
+    updateStatus();
+    
+    currentSocket.on('connect', updateStatus);
+    currentSocket.on('disconnect', updateStatus);
+    currentSocket.on('connect_error', () => setConnectionStatus(false));
+    
+    return () => {
+      currentSocket.off('connect', updateStatus);
+      currentSocket.off('disconnect', updateStatus);
+      currentSocket.off('connect_error');
+    };
+  }, [currentSocket]);
+  
+  const isConnected = connectionStatus;
 
   return (
     <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
@@ -169,8 +213,19 @@ function OnlineGameSetup({ onStart, onCancel }) {
         ) : (
           <div>
             <p className="mb-2">✗ Not connected to server</p>
-            <p className="text-xs">Start the server: <code className="bg-red-100 px-2 py-1 rounded text-xs">cd server && npm start</code></p>
-            <p className="text-xs mt-1">Server should run on: <code className="bg-red-100 px-2 py-1 rounded text-xs">http://localhost:3001</code></p>
+            <p className="text-xs mb-2">Start the server: <code className="bg-red-100 px-2 py-1 rounded text-xs">cd server && npm start</code></p>
+            <p className="text-xs mb-3">Server should run on: <code className="bg-red-100 px-2 py-1 rounded text-xs">http://localhost:3001</code></p>
+            <button
+              onClick={() => {
+                if (currentSocket) {
+                  currentSocket.connect();
+                  setError(null);
+                }
+              }}
+              className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+            >
+              Retry Connection
+            </button>
           </div>
         )}
       </div>
@@ -301,7 +356,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
       )}
 
       {/* Error Message */}
-      {error && (
+      {error && !isConnected && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {error}
         </div>
