@@ -335,12 +335,11 @@ function App() {
     // Handle online mode
     if (newPlayMode === 'online') {
       // Clean up existing socket listeners before setting up new ones
-      if (socket) {
-        socket.off('game-state-updated')
-        socket.off('new-game-started')
-        socket.off('game-reset')
-        socket.off('player-left')
-        socket.off('error')
+      if (socket && socket._gameHandlers) {
+        Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
+          socket.off(event, handler)
+        })
+        delete socket._gameHandlers
       }
       
       setSocket(onlineSocket)

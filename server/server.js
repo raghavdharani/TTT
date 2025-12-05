@@ -5,15 +5,37 @@ import cors from 'cors';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Allow CORS from any origin for development (restrict in production)
+const allowedOrigins = process.env.CLIENT_URL 
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  : ['*']; // Allow all origins for easier remote play
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },
 });
 
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // In-memory game rooms storage
@@ -314,7 +336,11 @@ function checkDraw(squares) {
 
 const PORT = process.env.PORT || 3001;
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`CORS enabled for: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+  console.log(`Server accessible at: http://localhost:${PORT}`);
+  console.log(`CORS enabled for: ${process.env.CLIENT_URL || 'all origins (*)'}`);
+  console.log(`\nTo allow remote connections:`);
+  console.log(`1. Find your local IP: ifconfig (Mac/Linux) or ipconfig (Windows)`);
+  console.log(`2. Other players should use: http://YOUR_IP:${PORT}`);
 });

@@ -13,6 +13,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [roomCreated, setRoomCreated] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState(false);
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [serverUrl, setServerUrl] = useState(
+    localStorage.getItem('socket_server_url') || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
+  );
 
   useEffect(() => {
     const sock = getSocket();
@@ -180,17 +184,21 @@ function OnlineGameSetup({ onStart, onCancel }) {
       setConnectionStatus(currentSocket.connected);
     };
     
+    const handleConnectError = () => {
+      setConnectionStatus(false);
+    };
+    
     // Initial check
     updateStatus();
     
     currentSocket.on('connect', updateStatus);
     currentSocket.on('disconnect', updateStatus);
-    currentSocket.on('connect_error', () => setConnectionStatus(false));
+    currentSocket.on('connect_error', handleConnectError);
     
     return () => {
       currentSocket.off('connect', updateStatus);
       currentSocket.off('disconnect', updateStatus);
-      currentSocket.off('connect_error');
+      currentSocket.off('connect_error', handleConnectError);
     };
   }, [currentSocket]);
   
@@ -201,6 +209,54 @@ function OnlineGameSetup({ onStart, onCancel }) {
       <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         Online Multiplayer
       </h2>
+
+      {/* Server Configuration */}
+      <div className="mb-4">
+        <button
+          onClick={() => setShowServerConfig(!showServerConfig)}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          {showServerConfig ? 'Hide' : 'Configure'} Server URL
+        </button>
+        {showServerConfig && (
+          <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Server URL:
+            </label>
+            <input
+              type="text"
+              value={serverUrl}
+              onChange={(e) => {
+                const newUrl = e.target.value;
+                setServerUrl(newUrl);
+                localStorage.setItem('socket_server_url', newUrl);
+              }}
+              onBlur={() => {
+                // Disconnect and reconnect with new URL when user finishes editing
+                disconnectSocket();
+                window.__SOCKET_URL__ = serverUrl;
+                setTimeout(() => {
+                  const sock = getSocket();
+                  setSocket(sock);
+                  if (!sock.connected) {
+                    sock.connect();
+                  }
+                }, 100);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.target.blur();
+                }
+              }}
+              placeholder="http://localhost:3001"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              For remote play, use the host's IP address (e.g., http://192.168.1.100:3001)
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Connection Status */}
       <div className={`mb-4 p-3 rounded-lg text-sm text-center ${
@@ -356,7 +412,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
       )}
 
       {/* Error Message */}
-      {error && !isConnected && (
+      {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {error}
         </div>
@@ -394,3 +450,4 @@ function OnlineGameSetup({ onStart, onCancel }) {
 }
 
 export default OnlineGameSetup;
+
