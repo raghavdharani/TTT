@@ -17,6 +17,33 @@ function OnlineGameSetup({ onStart, onCancel }) {
     const sock = getSocket();
     setSocket(sock);
 
+    // Check connection status
+    if (!sock.connected) {
+      sock.connect();
+    }
+
+    const handleConnect = () => {
+      console.log('Socket connected');
+      setError(null);
+    };
+
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      setError('Connection lost. Please check if the server is running.');
+      setIsConnecting(false);
+      setWaitingForPlayer(false);
+    };
+
+    const handleConnectError = (err) => {
+      console.error('Connection error:', err);
+      setError('Failed to connect to server. Make sure the server is running on port 3001.');
+      setIsConnecting(false);
+    };
+
+    sock.on('connect', handleConnect);
+    sock.on('disconnect', handleDisconnect);
+    sock.on('connect_error', handleConnectError);
+
     sock.on('room-created', ({ roomId: createdRoomId, playerSymbol: symbol }) => {
       setRoomId(createdRoomId);
       setPlayerSymbol(symbol);
@@ -33,7 +60,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
       }
       setWaitingForPlayer(false);
       setIsConnecting(false);
-      // Game will start when both players are ready
+      // Auto-ready both players to start the game
+      if (roomPlayers.length === 2) {
+        sock.emit('player-ready');
+      }
     });
 
     sock.on('error', ({ message }) => {
@@ -50,12 +80,17 @@ function OnlineGameSetup({ onStart, onCancel }) {
     });
 
     return () => {
-      // Cleanup on unmount
-      if (socket && !waitingForPlayer && !roomCreated) {
-        disconnectSocket();
-      }
+      // Cleanup event listeners
+      sock.off('connect', handleConnect);
+      sock.off('disconnect', handleDisconnect);
+      sock.off('connect_error', handleConnectError);
+      sock.off('room-created');
+      sock.off('player-joined');
+      sock.off('error');
+      sock.off('game-start');
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const handleCreateRoom = () => {
     if (!gameMode || !startingPlayer) {
@@ -92,9 +127,14 @@ function OnlineGameSetup({ onStart, onCancel }) {
         <div className="text-center mb-6">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
           <p className="text-lg font-semibold text-gray-700 mb-2">Room ID:</p>
-          <p className="text-3xl font-bold text-blue-600 mb-4 font-mono">{roomId}</p>
-          <p className="text-sm text-gray-600">
+          <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-4">
+            <p className="text-4xl font-bold text-blue-600 font-mono tracking-wider">{roomId}</p>
+          </div>
+          <p className="text-sm text-gray-600 mb-2">
             Share this room ID with your friend to play together!
+          </p>
+          <p className="text-xs text-gray-500">
+            Your symbol: <span className="font-bold text-lg">{playerSymbol}</span>
           </p>
         </div>
         <button
@@ -107,11 +147,31 @@ function OnlineGameSetup({ onStart, onCancel }) {
     );
   }
 
+  const currentSocket = socket || getSocket();
+  const isConnected = currentSocket?.connected;
+
   return (
     <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
       <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         Online Multiplayer
       </h2>
+
+      {/* Connection Status */}
+      <div className={`mb-4 p-3 rounded-lg text-sm text-center ${
+        isConnected 
+          ? 'bg-green-50 border border-green-200 text-green-700' 
+          : 'bg-red-50 border border-red-200 text-red-700'
+      }`}>
+        {isConnected ? (
+          <span>✓ Connected to server</span>
+        ) : (
+          <div>
+            <p className="mb-2">✗ Not connected to server</p>
+            <p className="text-xs">Start the server: <code className="bg-red-100 px-2 py-1 rounded text-xs">cd server && npm start</code></p>
+            <p className="text-xs mt-1">Server should run on: <code className="bg-red-100 px-2 py-1 rounded text-xs">http://localhost:3001</code></p>
+          </div>
+        )}
+      </div>
 
       {/* Mode Selection */}
       <div className="mb-6">

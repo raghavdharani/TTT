@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function GameSetup({ onStart }) {
+function GameSetup({ onStart, onOnlineSelect }) {
   const [playMode, setPlayMode] = useState(null) // '2player' or 'computer'
   const [difficulty, setDifficulty] = useState(null) // 'easy', 'hard', 'insane' (only for computer mode)
   const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
@@ -56,8 +56,12 @@ function GameSetup({ onStart }) {
           </button>
           <button
             onClick={() => {
-              setPlayMode('online')
-              setDifficulty(null) // Reset difficulty when switching modes
+              if (onOnlineSelect) {
+                onOnlineSelect()
+              } else {
+                setPlayMode('online')
+                setDifficulty(null) // Reset difficulty when switching modes
+              }
             }}
             className={`px-4 py-3 rounded-lg border-2 transition-colors ${
               playMode === 'online'

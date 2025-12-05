@@ -465,7 +465,10 @@ function App() {
             }}
           />
         ) : (
-          <GameSetup onStart={handleGameStart} />
+          <GameSetup 
+            onStart={handleGameStart} 
+            onOnlineSelect={() => setPlayMode('online')}
+          />
         )}
       </div>
     )
@@ -503,12 +506,12 @@ function App() {
           isComputerThinking={isComputerThinking}
         />
         {playMode === 'online' && roomId && (
-          <div className="mb-4 text-center">
-            <p className="text-sm text-gray-600">
-              Room: <span className="font-mono font-bold text-blue-600">{roomId}</span>
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+            <p className="text-sm font-semibold text-gray-700 mb-1">
+              Room ID: <span className="font-mono font-bold text-blue-600 text-lg">{roomId}</span>
             </p>
-            <p className="text-xs text-gray-500 mt-1">
-              You are playing as: <span className="font-bold">{playerSymbol}</span>
+            <p className="text-xs text-gray-600">
+              You are playing as: <span className="font-bold text-lg">{playerSymbol}</span>
             </p>
           </div>
         )}
