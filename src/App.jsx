@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Board from './components/Board'
 import GameStatus from './components/GameStatus'
 import NewGameButton from './components/NewGameButton'
@@ -63,6 +63,14 @@ function App() {
   const [tokenToMoveIndex, setTokenToMoveIndex] = useState(null)
   const [showHelp, setShowHelp] = useState(false)
   const [isComputerThinking, setIsComputerThinking] = useState(false)
+  
+  // Use ref to always access latest squares in effects
+  const squaresRef = useRef(squares)
+  const moveTimerRef = useRef(null)
+  const isProcessingMoveRef = useRef(false)
+  useEffect(() => {
+    squaresRef.current = squares
+  }, [squares])
 
   const currentPlayer = xIsNext ? 'X' : 'O'
   const currentPlayerTokenCount = countTokens(squares, currentPlayer)
@@ -144,48 +152,72 @@ function App() {
     setTokenToMoveIndex(null)
   }
 
+  // Reset computer thinking state when it's no longer computer's turn
+  useEffect(() => {
+    if (!isComputerTurn) {
+      setIsComputerThinking(false)
+      isProcessingMoveRef.current = false
+    }
+  }, [isComputerTurn])
+
   // Handle computer moves
   useEffect(() => {
-    // Only run if it's computer's turn, not already thinking, not relocating, and game not over
-    if (!isComputerTurn || isComputerThinking || isRelocating || gameOver || !difficulty) {
+    // Only run if it's computer's turn, not already processing, not relocating, and game not over
+    if (!isComputerTurn || isProcessingMoveRef.current || isRelocating || gameOver || !difficulty) {
       return
     }
     
+    // Mark that we're processing a move
+    isProcessingMoveRef.current = true
     setIsComputerThinking(true)
     
     // Add a small delay to make the computer move feel more natural
-    const timer = setTimeout(() => {
-      const currentSquares = squares // Capture current squares
-      const move = getComputerMove(currentSquares, 'O', difficulty)
-      
-      if (move) {
-        if (move.type === 'place') {
-          // Place a new token
-          const newSquares = [...currentSquares]
-          newSquares[move.to] = 'O'
-          finalizeMove(newSquares)
+    moveTimerRef.current = setTimeout(() => {
+      try {
+        const currentSquares = squaresRef.current // Use ref to get latest squares
+        const move = getComputerMove(currentSquares, 'O', difficulty)
+        
+        if (move) {
+          if (move.type === 'place') {
+            // Place a new token
+            const newSquares = [...currentSquares]
+            newSquares[move.to] = 'O'
+            finalizeMove(newSquares)
+          } else {
+            // Computer is moving a token - first pick it up
+            setTokenToMoveIndex(move.from)
+            const newSquares = [...currentSquares]
+            newSquares[move.from] = null
+            setSquares(newSquares)
+            
+            // Then place it after a short delay
+            setTimeout(() => {
+              const finalSquares = [...newSquares]
+              finalSquares[move.to] = 'O'
+              finalizeMove(finalSquares)
+            }, 300)
+          }
         } else {
-          // Computer is moving a token - first pick it up
-          setTokenToMoveIndex(move.from)
-          const newSquares = [...currentSquares]
-          newSquares[move.from] = null
-          setSquares(newSquares)
-          
-          // Then place it after a short delay
-          setTimeout(() => {
-            const finalSquares = [...newSquares]
-            finalSquares[move.to] = 'O'
-            finalizeMove(finalSquares)
-          }, 300)
+          // No valid move found - reset thinking state
+          setIsComputerThinking(false)
+          isProcessingMoveRef.current = false
         }
-      } else {
+      } catch (error) {
+        console.error('Error in computer move:', error)
         setIsComputerThinking(false)
+        isProcessingMoveRef.current = false
       }
+      moveTimerRef.current = null
     }, 500) // 500ms delay for better UX
     
-    return () => clearTimeout(timer)
+    return () => {
+      if (moveTimerRef.current) {
+        clearTimeout(moveTimerRef.current)
+        moveTimerRef.current = null
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isComputerTurn, isComputerThinking, isRelocating, gameOver, difficulty])
+  }, [isComputerTurn, isRelocating, gameOver, difficulty])
 
   const handleSquareClick = (index) => {
     if (gameOver || isComputerTurn) {
