@@ -72,22 +72,24 @@ function OnlineGameSetup({ onStart, onCancel }) {
       setWaitingForPlayer(false);
     });
 
-    sock.on('game-start', ({ gameState, players: roomPlayers, gameMode: roomGameMode, startingPlayer: roomStartingPlayer }) => {
+    const handleGameStart = ({ gameState, players: roomPlayers, gameMode: roomGameMode, startingPlayer: roomStartingPlayer }) => {
       // Game is starting - use room settings
       const finalGameMode = roomGameMode || gameMode || 1;
       const finalStartingPlayer = roomStartingPlayer || startingPlayer || 'X';
       onStart('online', finalGameMode, finalStartingPlayer, null, roomId, sock, playerSymbol);
-    });
+    };
+
+    sock.on('game-start', handleGameStart);
 
     return () => {
-      // Cleanup event listeners
+      // Cleanup event listeners with named handlers
       sock.off('connect', handleConnect);
       sock.off('disconnect', handleDisconnect);
       sock.off('connect_error', handleConnectError);
       sock.off('room-created');
       sock.off('player-joined');
       sock.off('error');
-      sock.off('game-start');
+      sock.off('game-start', handleGameStart);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount

@@ -334,13 +334,22 @@ function App() {
     
     // Handle online mode
     if (newPlayMode === 'online') {
+      // Clean up existing socket listeners before setting up new ones
+      if (socket) {
+        socket.off('game-state-updated')
+        socket.off('new-game-started')
+        socket.off('game-reset')
+        socket.off('player-left')
+        socket.off('error')
+      }
+      
       setSocket(onlineSocket)
       setRoomId(onlineRoomId)
       setPlayerSymbol(onlinePlayerSymbol)
       
-      // Set up socket event listeners
+      // Set up socket event listeners with named handlers for proper cleanup
       if (onlineSocket) {
-        onlineSocket.on('game-state-updated', ({ gameState }) => {
+        const handleGameStateUpdated = ({ gameState }) => {
           setSquares(gameState.squares)
           setXIsNext(gameState.xIsNext)
           setWinner(gameState.winner)
@@ -350,37 +359,59 @@ function App() {
           setXWins(gameState.xWins)
           setOWins(gameState.oWins)
           setSeriesWinner(gameState.seriesWinner)
-        })
+        }
         
-        onlineSocket.on('new-game-started', ({ gameState }) => {
+        const handleNewGameStarted = ({ gameState }) => {
           setSquares(gameState.squares)
           setXIsNext(gameState.xIsNext)
           setWinner(gameState.winner)
           setGameOver(gameState.gameOver)
           setTokenToMoveIndex(gameState.tokenToMoveIndex)
           setCurrentGame(gameState.currentGame)
-        })
+        }
         
-        onlineSocket.on('game-reset', ({ gameState }) => {
+        const handleGameReset = ({ gameState }) => {
           setSquares(gameState.squares)
           setXIsNext(gameState.xIsNext)
           setWinner(gameState.winner)
           setGameOver(gameState.gameOver)
           setTokenToMoveIndex(gameState.tokenToMoveIndex)
-        })
+        }
         
-        onlineSocket.on('player-left', () => {
+        const handlePlayerLeft = () => {
           alert('Your opponent has left the game. Returning to menu.')
           handleReturnToMenu()
-        })
+        }
         
-        onlineSocket.on('error', ({ message }) => {
+        const handleError = ({ message }) => {
           alert(`Error: ${message}`)
-        })
+        }
+        
+        onlineSocket.on('game-state-updated', handleGameStateUpdated)
+        onlineSocket.on('new-game-started', handleNewGameStarted)
+        onlineSocket.on('game-reset', handleGameReset)
+        onlineSocket.on('player-left', handlePlayerLeft)
+        onlineSocket.on('error', handleError)
+        
+        // Store handlers for cleanup
+        onlineSocket._gameHandlers = {
+          'game-state-updated': handleGameStateUpdated,
+          'new-game-started': handleNewGameStarted,
+          'game-reset': handleGameReset,
+          'player-left': handlePlayerLeft,
+          'error': handleError,
+        }
       }
     } else {
       // Clean up socket if switching from online mode
       if (socket) {
+        // Remove all game-related listeners
+        if (socket._gameHandlers) {
+          Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
+            socket.off(event, handler)
+          })
+          delete socket._gameHandlers
+        }
         disconnectSocket()
         setSocket(null)
         setRoomId(null)
@@ -393,6 +424,13 @@ function App() {
   
   const handleReturnToMenu = () => {
     if (socket) {
+      // Clean up all game-related listeners
+      if (socket._gameHandlers) {
+        Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
+          socket.off(event, handler)
+        })
+        delete socket._gameHandlers
+      }
       disconnectSocket()
       setSocket(null)
     }
@@ -408,6 +446,18 @@ function App() {
     setOWins(0)
     setSeriesWinner(null)
   }
+  
+  // Cleanup socket listeners on unmount
+  useEffect(() => {
+    return () => {
+      if (socket && socket._gameHandlers) {
+        Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
+          socket.off(event, handler)
+        })
+        delete socket._gameHandlers
+      }
+    }
+  }, [socket])
 
   const startNewGame = (startingPlayer) => {
     setSquares(Array(9).fill(null))
