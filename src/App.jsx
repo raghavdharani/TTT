@@ -4,8 +4,10 @@ import GameStatus from './components/GameStatus'
 import NewGameButton from './components/NewGameButton'
 import Help from './components/Help'
 import GameSetup from './components/GameSetup'
+import OnlineGameSetup from './components/OnlineGameSetup'
 import { calculateWinner, checkDraw } from './utils/gameLogic'
 import { getComputerMove } from './utils/ai'
+import { getSocket, disconnectSocket } from './utils/socket'
 
 const TOKEN_LIMIT = 3
 
@@ -44,10 +46,15 @@ const isAdjacent = (sourceIndex, targetIndex) => {
 function App() {
   // Game setup state
   const [showSetup, setShowSetup] = useState(true)
-  const [playMode, setPlayMode] = useState(null) // '2player' or 'computer'
+  const [playMode, setPlayMode] = useState(null) // '2player', 'computer', or 'online'
   const [difficulty, setDifficulty] = useState(null) // 'easy', 'hard', 'insane'
   const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
   const [seriesStartingPlayer, setSeriesStartingPlayer] = useState(null) // 'X' or 'O'
+  
+  // Online multiplayer state
+  const [socket, setSocket] = useState(null)
+  const [roomId, setRoomId] = useState(null)
+  const [playerSymbol, setPlayerSymbol] = useState(null) // 'X' or 'O' for online mode
   
   // Series state
   const [currentGame, setCurrentGame] = useState(1)
@@ -80,6 +87,9 @@ function App() {
   // Determine if current player is computer
   // In computer mode, the computer always plays as 'O'
   const isComputerTurn = playMode === 'computer' && currentPlayer === 'O' && !gameOver
+  
+  // Determine if it's current player's turn in online mode
+  const isMyTurn = playMode !== 'online' || (playerSymbol === currentPlayer && !gameOver)
 
   const checkSeriesWinner = (xWins, oWins, gameMode, totalGamesPlayed) => {
     if (gameMode === 1) {
@@ -104,7 +114,13 @@ function App() {
     return null
   }
 
-  const finalizeMove = (updatedSquares) => {
+  const finalizeMove = (updatedSquares, moveType = null, fromIndex = null, toIndex = null) => {
+    // For online mode, emit move to server instead of updating locally
+    if (playMode === 'online' && socket && moveType) {
+      socket.emit('make-move', { moveType, fromIndex, toIndex })
+      return
+    }
+
     setSquares(updatedSquares)
 
     const gameWinner = calculateWinner(updatedSquares)
@@ -220,7 +236,7 @@ function App() {
   }, [isComputerTurn, isRelocating, gameOver, difficulty])
 
   const handleSquareClick = (index) => {
-    if (gameOver || isComputerTurn) {
+    if (gameOver || isComputerTurn || (playMode === 'online' && !isMyTurn)) {
       return
     }
 
@@ -241,6 +257,10 @@ function App() {
         newSquares[index] = null
         setSquares(newSquares)
         setTokenToMoveIndex(index)
+        // Emit pickup move for online mode
+        if (playMode === 'online' && socket) {
+          socket.emit('make-move', { moveType: 'pickup', fromIndex: index, toIndex: null })
+        }
         return
       }
 
@@ -254,6 +274,10 @@ function App() {
         newSquares[index] = currentPlayer
         setSquares(newSquares)
         setTokenToMoveIndex(null)
+        // Emit cancel move for online mode
+        if (playMode === 'online' && socket) {
+          socket.emit('make-move', { moveType: 'cancel-relocate', fromIndex: tokenToMoveIndex, toIndex: null })
+        }
         return
       }
 
@@ -263,7 +287,7 @@ function App() {
       }
 
       newSquares[index] = currentPlayer
-      finalizeMove(newSquares)
+      finalizeMove(newSquares, 'relocate', tokenToMoveIndex, index)
       return
     }
 
@@ -277,6 +301,10 @@ function App() {
       newSquares[index] = null
       setSquares(newSquares)
       setTokenToMoveIndex(index)
+      // Emit pickup move for online mode
+      if (playMode === 'online' && socket) {
+        socket.emit('make-move', { moveType: 'pickup', fromIndex: index, toIndex: null })
+      }
       return
     }
 
@@ -290,10 +318,10 @@ function App() {
     }
 
     newSquares[index] = currentPlayer
-    finalizeMove(newSquares)
+    finalizeMove(newSquares, 'place', null, index)
   }
 
-  const handleGameStart = (newPlayMode, mode, startingPlayer, newDifficulty) => {
+  const handleGameStart = (newPlayMode, mode, startingPlayer, newDifficulty, onlineRoomId = null, onlineSocket = null, onlinePlayerSymbol = null) => {
     setPlayMode(newPlayMode)
     setDifficulty(newDifficulty)
     setGameMode(mode)
@@ -303,7 +331,82 @@ function App() {
     setXWins(0)
     setOWins(0)
     setSeriesWinner(null)
+    
+    // Handle online mode
+    if (newPlayMode === 'online') {
+      setSocket(onlineSocket)
+      setRoomId(onlineRoomId)
+      setPlayerSymbol(onlinePlayerSymbol)
+      
+      // Set up socket event listeners
+      if (onlineSocket) {
+        onlineSocket.on('game-state-updated', ({ gameState }) => {
+          setSquares(gameState.squares)
+          setXIsNext(gameState.xIsNext)
+          setWinner(gameState.winner)
+          setGameOver(gameState.gameOver)
+          setTokenToMoveIndex(gameState.tokenToMoveIndex)
+          setCurrentGame(gameState.currentGame)
+          setXWins(gameState.xWins)
+          setOWins(gameState.oWins)
+          setSeriesWinner(gameState.seriesWinner)
+        })
+        
+        onlineSocket.on('new-game-started', ({ gameState }) => {
+          setSquares(gameState.squares)
+          setXIsNext(gameState.xIsNext)
+          setWinner(gameState.winner)
+          setGameOver(gameState.gameOver)
+          setTokenToMoveIndex(gameState.tokenToMoveIndex)
+          setCurrentGame(gameState.currentGame)
+        })
+        
+        onlineSocket.on('game-reset', ({ gameState }) => {
+          setSquares(gameState.squares)
+          setXIsNext(gameState.xIsNext)
+          setWinner(gameState.winner)
+          setGameOver(gameState.gameOver)
+          setTokenToMoveIndex(gameState.tokenToMoveIndex)
+        })
+        
+        onlineSocket.on('player-left', () => {
+          alert('Your opponent has left the game. Returning to menu.')
+          handleReturnToMenu()
+        })
+        
+        onlineSocket.on('error', ({ message }) => {
+          alert(`Error: ${message}`)
+        })
+      }
+    } else {
+      // Clean up socket if switching from online mode
+      if (socket) {
+        disconnectSocket()
+        setSocket(null)
+        setRoomId(null)
+        setPlayerSymbol(null)
+      }
+    }
+    
     startNewGame(startingPlayer)
+  }
+  
+  const handleReturnToMenu = () => {
+    if (socket) {
+      disconnectSocket()
+      setSocket(null)
+    }
+    setRoomId(null)
+    setPlayerSymbol(null)
+    setPlayMode(null)
+    setDifficulty(null)
+    setGameMode(null)
+    setSeriesStartingPlayer(null)
+    setShowSetup(true)
+    setCurrentGame(1)
+    setXWins(0)
+    setOWins(0)
+    setSeriesWinner(null)
   }
 
   const startNewGame = (startingPlayer) => {
@@ -317,15 +420,7 @@ function App() {
   const handleNextGame = () => {
     if (seriesWinner || (gameMode === 1 && gameOver)) {
       // Series is over, or single game is over - go back to setup
-      setShowSetup(true)
-      setPlayMode(null)
-      setDifficulty(null)
-      setGameMode(null)
-      setSeriesStartingPlayer(null)
-      setCurrentGame(1)
-      setXWins(0)
-      setOWins(0)
-      setSeriesWinner(null)
+      handleReturnToMenu()
     } else {
       // Continue series - alternate starting player
       // After game 1 (odd): next game should start with opposite
@@ -337,20 +432,41 @@ function App() {
         ? seriesStartingPlayer 
         : (seriesStartingPlayer === 'X' ? 'O' : 'X')
       
-      setCurrentGame(nextGameNumber)
-      startNewGame(nextStartingPlayer)
+      if (playMode === 'online' && socket) {
+        socket.emit('start-new-game')
+      } else {
+        setCurrentGame(nextGameNumber)
+        startNewGame(nextStartingPlayer)
+      }
     }
   }
 
   const handleReset = () => {
     // Reset current game only
-    startNewGame(xIsNext ? 'X' : 'O')
+    if (playMode === 'online' && socket) {
+      socket.emit('reset-game')
+    } else {
+      startNewGame(xIsNext ? 'X' : 'O')
+    }
   }
 
   if (showSetup) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <GameSetup onStart={handleGameStart} />
+        {playMode === 'online' ? (
+          <OnlineGameSetup 
+            onStart={handleGameStart} 
+            onCancel={() => {
+              setPlayMode(null)
+              if (socket) {
+                disconnectSocket()
+                setSocket(null)
+              }
+            }}
+          />
+        ) : (
+          <GameSetup onStart={handleGameStart} />
+        )}
       </div>
     )
   }
@@ -386,6 +502,16 @@ function App() {
           isComputerTurn={isComputerTurn}
           isComputerThinking={isComputerThinking}
         />
+        {playMode === 'online' && roomId && (
+          <div className="mb-4 text-center">
+            <p className="text-sm text-gray-600">
+              Room: <span className="font-mono font-bold text-blue-600">{roomId}</span>
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              You are playing as: <span className="font-bold">{playerSymbol}</span>
+            </p>
+          </div>
+        )}
         <Board
           squares={squares}
           onSquareClick={handleSquareClick}
@@ -396,7 +522,7 @@ function App() {
           tokenLimit={TOKEN_LIMIT}
           canTokenMove={canTokenMove}
           isAdjacent={isAdjacent}
-          isComputerTurn={isComputerTurn}
+          isComputerTurn={isComputerTurn || (playMode === 'online' && !isMyTurn)}
         />
         <NewGameButton
           onReset={handleReset}

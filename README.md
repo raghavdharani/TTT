@@ -4,7 +4,10 @@ A modern, strategic twist on tic-tac-toe where you can shift and relocate your t
 
 ## Features
 
-- ✅ Two-player turn-based gameplay
+- ✅ Two-player turn-based gameplay (local)
+- ✅ Online multiplayer (play with friends remotely!)
+- ✅ VS Computer mode with multiple difficulty levels
+- ✅ Series play (1 game, best of 3, best of 5)
 - ✅ Win detection (all 8 winning combinations)
 - ✅ Draw detection
 - ✅ Game reset functionality
@@ -18,6 +21,8 @@ A modern, strategic twist on tic-tac-toe where you can shift and relocate your t
 - **React 18+** - UI framework
 - **Vite** - Build tool
 - **Tailwind CSS** - Styling
+- **Socket.io** - Real-time multiplayer communication
+- **Express** - Backend server
 - **Jest** - Testing framework
 - **React Testing Library** - Component testing
 
@@ -41,6 +46,28 @@ npm run dev
 ```
 
 3. Open your browser and navigate to the URL shown in the terminal (typically `http://localhost:5173`)
+
+### Online Multiplayer Setup
+
+To enable online multiplayer functionality:
+
+1. **Install server dependencies:**
+   ```bash
+   cd server
+   npm install
+   ```
+
+2. **Start the backend server** (in a separate terminal):
+   ```bash
+   cd server
+   npm start
+   ```
+
+3. **Start the frontend** (as described above)
+
+4. **Play online!** Select "Online" mode in the game setup screen.
+
+For detailed online multiplayer setup instructions, see [ONLINE_MULTIPLAYER_SETUP.md](./ONLINE_MULTIPLAYER_SETUP.md)
 
 ### Building for Production
 

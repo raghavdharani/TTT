@@ -25,12 +25,12 @@ function GameSetup({ onStart }) {
         Move tokens, play series, and outsmart your opponent!
       </p>
 
-      {/* Play Mode Selection (2 Player vs VS Computer) */}
+      {/* Play Mode Selection (2 Player vs VS Computer vs Online) */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-3">
           Select Play Mode:
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => {
               setPlayMode('2player')
@@ -53,6 +53,19 @@ function GameSetup({ onStart }) {
             }`}
           >
             VS Computer
+          </button>
+          <button
+            onClick={() => {
+              setPlayMode('online')
+              setDifficulty(null) // Reset difficulty when switching modes
+            }}
+            className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+              playMode === 'online'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+            }`}
+          >
+            Online
           </button>
         </div>
       </div>
