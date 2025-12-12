@@ -7,9 +7,14 @@ const app = express();
 const httpServer = createServer(app);
 
 // Allow CORS from any origin for development (restrict in production)
+// In production, set CLIENT_URL to your Vercel frontend URL
 const allowedOrigins = process.env.CLIENT_URL 
   ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-  : ['*']; // Allow all origins for easier remote play
+  : ['*']; // Allow all origins if CLIENT_URL not set (for easier deployment)
+
+if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
+  console.warn('⚠️  WARNING: CLIENT_URL not set in production. Allowing all origins. Set CLIENT_URL for security.');
+}
 
 const io = new Server(httpServer, {
   cors: {
@@ -151,6 +156,7 @@ io.on('connection', (socket) => {
       room.players.forEach((p) => { p.ready = false; });
       
       io.to(room.id).emit('game-start', {
+        roomId: room.id,
         gameState: room.gameState,
         players: room.players.map((p) => ({ id: p.id, symbol: p.symbol })),
         gameMode: room.gameMode,

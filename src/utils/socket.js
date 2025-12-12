@@ -17,10 +17,23 @@ let socket = null;
 export const connectSocket = () => {
   const currentUrl = getSocketUrl();
   
-  // If socket exists but URL changed, disconnect and recreate
-  if (socket && socket.io && socket.io.uri !== currentUrl.replace(/^http/, 'ws')) {
-    socket.disconnect();
-    socket = null;
+  // If socket exists, check if URL changed
+  if (socket) {
+    const socketUrl = socket.io ? socket.io.uri : null;
+    // Normalize URLs for comparison (remove protocol, trailing slashes)
+    const normalizeUrl = (url) => {
+      if (!url) return null;
+      return url.replace(/^https?:\/\//, '').replace(/^wss?:\/\//, '').replace(/\/$/, '');
+    };
+    
+    const currentNormalized = normalizeUrl(currentUrl);
+    const socketNormalized = normalizeUrl(socketUrl);
+    
+    // If URL changed, disconnect and recreate
+    if (socketNormalized && currentNormalized && socketNormalized !== currentNormalized) {
+      socket.disconnect();
+      socket = null;
+    }
   }
   
   if (!socket) {
@@ -30,7 +43,7 @@ export const connectSocket = () => {
       reconnectionDelay: 1000,
       reconnectionAttempts: Infinity, // Keep trying to reconnect
       timeout: 5000,
-      forceNew: false,
+      forceNew: true, // Force new connection when creating
     });
   } else if (!socket.connected) {
     socket.connect();
@@ -51,3 +64,5 @@ export const getSocket = () => {
   }
   return socket;
 };
+
+

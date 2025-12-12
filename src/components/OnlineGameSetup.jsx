@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getSocket, disconnectSocket } from '../utils/socket';
 
 function OnlineGameSetup({ onStart, onCancel }) {
@@ -17,6 +17,19 @@ function OnlineGameSetup({ onStart, onCancel }) {
   const [serverUrl, setServerUrl] = useState(
     localStorage.getItem('socket_server_url') || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
   );
+  
+  // Use refs to access latest state values in event handlers
+  const roomIdRef = useRef('');
+  const playerSymbolRef = useRef(null);
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
+  
+  useEffect(() => {
+    playerSymbolRef.current = playerSymbol;
+  }, [playerSymbol]);
 
   useEffect(() => {
     const sock = getSocket();
@@ -94,11 +107,33 @@ function OnlineGameSetup({ onStart, onCancel }) {
     sock.on('player-joined', handlePlayerJoined);
     sock.on('error', handleError);
 
-    const handleGameStart = ({ gameState, players: roomPlayers, gameMode: roomGameMode, startingPlayer: roomStartingPlayer }) => {
+    const handleGameStart = ({ roomId: eventRoomId, gameState, players: roomPlayers, gameMode: roomGameMode, startingPlayer: roomStartingPlayer }) => {
       // Game is starting - use room settings
       const finalGameMode = roomGameMode || gameMode || 1;
       const finalStartingPlayer = roomStartingPlayer || startingPlayer || 'X';
-      onStart('online', finalGameMode, finalStartingPlayer, null, roomId, sock, playerSymbol);
+      
+      // Get player symbol from event data or ref
+      const myPlayer = roomPlayers?.find((p) => p.id === sock.id);
+      const finalPlayerSymbol = myPlayer?.symbol || playerSymbolRef.current;
+      
+      // Get roomId from event data (most reliable) or ref as fallback
+      const finalRoomId = eventRoomId || roomIdRef.current;
+      
+      console.log('Game starting:', { finalRoomId, finalPlayerSymbol, finalGameMode, finalStartingPlayer });
+      
+      if (!finalRoomId) {
+        console.error('Room ID is missing when starting game');
+        setError('Room ID is missing. Please try creating a new room.');
+        return;
+      }
+      
+      if (!finalPlayerSymbol) {
+        console.error('Player symbol is missing when starting game');
+        setError('Player symbol is missing. Please try creating a new room.');
+        return;
+      }
+      
+      onStart('online', finalGameMode, finalStartingPlayer, null, finalRoomId, sock, finalPlayerSymbol);
     };
 
     sock.on('game-start', handleGameStart);
@@ -234,7 +269,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
               onBlur={() => {
                 // Disconnect and reconnect with new URL when user finishes editing
                 disconnectSocket();
-                window.__SOCKET_URL__ = serverUrl;
+                // Clear the window variable to force fresh lookup
+                delete window.__SOCKET_URL__;
+                // Update localStorage (already done in onChange)
+                // Force a new socket connection with the updated URL
                 setTimeout(() => {
                   const sock = getSocket();
                   setSocket(sock);
