@@ -29,6 +29,8 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
+  transports: ['websocket', 'polling'], // Explicitly allow both transports
+  allowEIO3: true, // Allow Engine.IO v3 clients
 });
 
 app.use(cors({
@@ -42,6 +44,20 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+// Health check endpoint for Railway
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'ShiftTacToe Server', 
+    status: 'running',
+    socketIo: true 
+  });
+});
 
 // In-memory game rooms storage
 const rooms = new Map();
@@ -62,6 +78,15 @@ const cleanupRoom = (roomId) => {
 
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
+  console.log(`Connection from origin: ${socket.handshake.headers.origin || 'no origin'}`);
+  
+  socket.on('disconnect', (reason) => {
+    console.log(`Player disconnected: ${socket.id}, reason: ${reason}`);
+  });
+  
+  socket.on('error', (error) => {
+    console.error(`Socket error for ${socket.id}:`, error);
+  });
 
   // Create a new room
   socket.on('create-room', ({ gameMode, startingPlayer }) => {
@@ -343,10 +368,12 @@ function checkDraw(squares) {
 const PORT = process.env.PORT || 3001;
 
 httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Server accessible at: http://localhost:${PORT}`);
-  console.log(`CORS enabled for: ${process.env.CLIENT_URL || 'all origins (*)'}`);
-  console.log(`\nTo allow remote connections:`);
-  console.log(`1. Find your local IP: ifconfig (Mac/Linux) or ipconfig (Windows)`);
-  console.log(`2. Other players should use: http://YOUR_IP:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server accessible at: http://localhost:${PORT}`);
+  console.log(`✅ CORS enabled for: ${process.env.CLIENT_URL || 'all origins (*)'}`);
+  console.log(`✅ Socket.IO server ready for connections`);
+  console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    console.log(`✅ Railway domain: ${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+  }
 });
