@@ -98,12 +98,14 @@ export const connectSocket = () => {
     fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'socket.js:40',message:'Creating new socket',data:{url:currentUrl,hasProtocol:currentUrl.startsWith('http://')||currentUrl.startsWith('https://')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
     socket = io(currentUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: Infinity, // Keep trying to reconnect
-      timeout: 5000,
+      timeout: 20000, // Increase timeout for Railway
       forceNew: true, // Force new connection when creating
+      upgrade: true, // Allow upgrade from polling to websocket
+      rememberUpgrade: false, // Don't remember failed upgrades
     });
     // #region agent log
     socket.on('connect', () => {
