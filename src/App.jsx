@@ -220,8 +220,14 @@ function App() {
 
     const valueAtIndex = squares[index]
 
+    // CRITICAL: In online mode, always check server state (tokenToMoveIndex) to determine if relocating
+    // The local state might be out of sync, so we must trust the server state
+    const isActuallyRelocating = playMode === 'online' 
+      ? tokenToMoveIndex !== null  // Use current state (synced from server)
+      : isRelocating
+
     // If relocating, handle placement or switching tokens
-    if (isRelocating) {
+    if (isActuallyRelocating) {
       // Allow switching to a different token of the same player
       if (valueAtIndex === currentPlayer) {
         // Validate using centralized rules
@@ -344,10 +350,23 @@ function App() {
       return
     }
 
+    // CRITICAL: In online mode, if we're relocating (tokenToMoveIndex is set), we should NOT be here
+    // This is a safety check to prevent sending 'place' when we should be sending 'relocate'
+    if (playMode === 'online' && tokenToMoveIndex !== null) {
+      console.warn('[handleSquareClick] Attempted to place token while relocating. This should not happen. Current tokenToMoveIndex:', tokenToMoveIndex)
+      // Don't send the move - the server will reject it anyway
+      return
+    }
+
     // Validate placement using centralized rules
     const validation = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
     if (!validation.valid) {
       console.warn('Cannot place token:', validation.error)
+      // In online mode, show the error to user since server will reject it
+      if (playMode === 'online' && socket) {
+        // The server will send an error, but we can prevent the invalid move
+        return
+      }
       return
     }
 
