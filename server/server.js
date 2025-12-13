@@ -245,20 +245,37 @@ io.on('connection', (socket) => {
   socket.on('make-move', ({ moveType, fromIndex, toIndex }) => {
     const playerInfo = players.get(socket.id);
     if (!playerInfo) {
-      socket.emit('error', { message: 'Not in a room' });
+      console.error(`[make-move] Player ${socket.id} not found in players map`);
+      socket.emit('error', { message: 'Not in a room. Please rejoin the game.' });
       return;
     }
 
     const room = rooms.get(playerInfo.roomId);
     if (!room) {
-      socket.emit('error', { message: 'Room not found' });
+      console.error(`[make-move] Room ${playerInfo.roomId} not found for player ${socket.id}`);
+      socket.emit('error', { message: 'Room not found. Please rejoin the game.' });
       return;
     }
 
     const player = room.players.find((p) => p.id === socket.id);
     if (!player) {
-      socket.emit('error', { message: 'Player not found in room' });
-      return;
+      console.error(`[make-move] Player ${socket.id} not found in room ${playerInfo.roomId}`);
+      // Try to re-add player to room if they were in it before
+      const existingPlayer = room.players.find((p) => p.symbol === 'X' || p.symbol === 'O');
+      if (existingPlayer && room.players.length < 2) {
+        // Re-add player if room exists but player was lost
+        room.players.push({
+          id: socket.id,
+          symbol: existingPlayer.symbol === 'X' ? 'O' : 'X',
+          ready: false,
+        });
+        players.set(socket.id, { roomId: playerInfo.roomId, playerId: socket.id });
+        socket.join(playerInfo.roomId);
+        console.log(`[make-move] Re-added player ${socket.id} to room ${playerInfo.roomId}`);
+      } else {
+        socket.emit('error', { message: 'Player not found in room. Please rejoin the game.' });
+        return;
+      }
     }
 
     const currentPlayer = room.gameState.xIsNext ? 'X' : 'O';
@@ -308,11 +325,8 @@ io.on('connection', (socket) => {
         socket.emit('error', { message: 'This token cannot move (no adjacent empty squares)' });
         return;
       }
-      // Validate: Can only pick up if already at token limit (must move, not place)
-      if (currentPlayerTokenCount < TOKEN_LIMIT) {
-        socket.emit('error', { message: 'You can still place new tokens. Pick up a token only when you have 3 tokens on the board.' });
-        return;
-      }
+      // Note: Players can move tokens at any time, not just when at token limit
+      // The restriction is only on placing new tokens when at limit
       room.gameState.tokenToMoveIndex = fromIndex;
       newSquares[fromIndex] = null;
     } else if (moveType === 'relocate') {

@@ -42,14 +42,8 @@ function Board({
       return currentPlayerTokenCount < tokenLimit
     }
 
-    // Player's own tokens are enabled ONLY if:
-    // 1. Player is at token limit (must move, not place)
-    // 2. Token can actually move
+    // Player's own tokens are enabled if they can move (at any time)
     if (value === currentPlayer) {
-      // Can only pick up/move tokens when at token limit
-      if (currentPlayerTokenCount < tokenLimit) {
-        return false // Must place new tokens when under limit
-      }
       return canTokenMove(squares, index)
     }
 
