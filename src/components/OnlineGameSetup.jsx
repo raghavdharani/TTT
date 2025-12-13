@@ -17,6 +17,11 @@ function OnlineGameSetup({ onStart, onCancel }) {
   const [serverUrl, setServerUrl] = useState(
     localStorage.getItem('socket_server_url') || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
   );
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:20',message:'Server URL state initialized',data:{serverUrl,fromLocalStorage:localStorage.getItem('socket_server_url'),fromEnv:import.meta.env.VITE_SOCKET_URL,hasProtocol:serverUrl.startsWith('http://')||serverUrl.startsWith('https://')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  }, []);
+  // #endregion
   
   // Use refs to access latest state values in event handlers
   const roomIdRef = useRef('');
@@ -61,6 +66,9 @@ function OnlineGameSetup({ onStart, onCancel }) {
 
     const handleConnectError = (err) => {
       console.error('Connection error:', err);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:62',message:'handleConnectError',data:{errorMessage:err.message,errorType:err.type,errorDescription:err.description,errorData:err.data,socketId:sock.id,connected:sock.connected},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       setError('Failed to connect to server. Make sure the server is running on port 3001.');
       setIsConnecting(false);
       // Retry connection after a delay
@@ -262,16 +270,35 @@ function OnlineGameSetup({ onStart, onCancel }) {
               type="text"
               value={serverUrl}
               onChange={(e) => {
-                const newUrl = e.target.value;
+                const newUrl = e.target.value.trim();
                 setServerUrl(newUrl);
+                // Store the raw URL (user might be typing)
                 localStorage.setItem('socket_server_url', newUrl);
               }}
               onBlur={() => {
+                // Normalize URL when user finishes editing (ensure protocol is present)
+                const normalizeUrl = (url) => {
+                  if (!url || typeof url !== 'string') return url;
+                  url = url.trim();
+                  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                  if (url.includes('localhost') || url.match(/^\d+\.\d+\.\d+\.\d+/)) {
+                    return `http://${url}`;
+                  } else {
+                    return `https://${url}`;
+                  }
+                };
+                const normalizedUrl = normalizeUrl(serverUrl);
+                if (normalizedUrl !== serverUrl) {
+                  setServerUrl(normalizedUrl);
+                  localStorage.setItem('socket_server_url', normalizedUrl);
+                }
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:277',message:'Server URL changed onBlur',data:{originalUrl:serverUrl,normalizedUrl,hasProtocol:normalizedUrl.startsWith('http://')||normalizedUrl.startsWith('https://')},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 // Disconnect and reconnect with new URL when user finishes editing
                 disconnectSocket();
                 // Clear the window variable to force fresh lookup
                 delete window.__SOCKET_URL__;
-                // Update localStorage (already done in onChange)
                 // Force a new socket connection with the updated URL
                 setTimeout(() => {
                   const sock = getSocket();
