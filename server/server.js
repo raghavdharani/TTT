@@ -213,6 +213,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Helper function to count tokens
+  const countTokens = (squares, player) => {
+    return squares.reduce((count, square) => (square === player ? count + 1 : count), 0);
+  };
+
+  // Helper function to get adjacent indices
+  const getAdjacentIndices = (index) => {
+    const row = Math.floor(index / 3);
+    const col = index % 3;
+    const adjacent = [];
+    if (row > 0) adjacent.push((row - 1) * 3 + col);
+    if (row < 2) adjacent.push((row + 1) * 3 + col);
+    if (col > 0) adjacent.push(row * 3 + (col - 1));
+    if (col < 2) adjacent.push(row * 3 + (col + 1));
+    return adjacent;
+  };
+
+  // Helper function to check if token can move
+  const canTokenMove = (squares, index) => {
+    const adjacentIndices = getAdjacentIndices(index);
+    return adjacentIndices.some((adjIndex) => squares[adjIndex] === null);
+  };
+
+  // Helper function to check if indices are adjacent
+  const isAdjacent = (sourceIndex, targetIndex) => {
+    return getAdjacentIndices(sourceIndex).includes(targetIndex);
+  };
+
   // Make a move
   socket.on('make-move', ({ moveType, fromIndex, toIndex }) => {
     const playerInfo = players.get(socket.id);
@@ -244,21 +272,78 @@ io.on('connection', (socket) => {
       return;
     }
 
+    const TOKEN_LIMIT = 3;
+    const squares = room.gameState.squares;
+    const currentPlayerTokenCount = countTokens(squares, currentPlayer);
+
     // Apply move to game state
-    const newSquares = [...room.gameState.squares];
+    const newSquares = [...squares];
 
     if (moveType === 'place') {
+      // Validate: Can only place if under token limit
+      if (currentPlayerTokenCount >= TOKEN_LIMIT) {
+        socket.emit('error', { message: 'Cannot place more tokens. You have reached the limit of 3 tokens. Move an existing token instead.' });
+        return;
+      }
+      // Validate: Target must be empty
+      if (newSquares[toIndex] !== null) {
+        socket.emit('error', { message: 'Cannot place token on occupied square' });
+        return;
+      }
+      // Validate: Must not be relocating (tokenToMoveIndex should be null)
+      if (room.gameState.tokenToMoveIndex !== null) {
+        socket.emit('error', { message: 'Cannot place new token while relocating. Complete or cancel the relocation first.' });
+        return;
+      }
       newSquares[toIndex] = currentPlayer;
       room.gameState.tokenToMoveIndex = null;
     } else if (moveType === 'pickup') {
+      // Validate: Must be picking up own token
+      if (squares[fromIndex] !== currentPlayer) {
+        socket.emit('error', { message: 'Can only pick up your own tokens' });
+        return;
+      }
+      // Validate: Token must be able to move
+      if (!canTokenMove(squares, fromIndex)) {
+        socket.emit('error', { message: 'This token cannot move (no adjacent empty squares)' });
+        return;
+      }
+      // Validate: Can only pick up if already at token limit (must move, not place)
+      if (currentPlayerTokenCount < TOKEN_LIMIT) {
+        socket.emit('error', { message: 'You can still place new tokens. Pick up a token only when you have 3 tokens on the board.' });
+        return;
+      }
       room.gameState.tokenToMoveIndex = fromIndex;
       newSquares[fromIndex] = null;
     } else if (moveType === 'relocate') {
+      // Validate: Must be relocating (tokenToMoveIndex must be set)
+      if (room.gameState.tokenToMoveIndex === null || room.gameState.tokenToMoveIndex !== fromIndex) {
+        socket.emit('error', { message: 'Invalid relocation. Pick up a token first.' });
+        return;
+      }
+      // Validate: Target must be empty
+      if (newSquares[toIndex] !== null) {
+        socket.emit('error', { message: 'Cannot relocate to occupied square' });
+        return;
+      }
+      // Validate: Target must be adjacent to source
+      if (!isAdjacent(fromIndex, toIndex)) {
+        socket.emit('error', { message: 'Can only move tokens to adjacent squares' });
+        return;
+      }
       newSquares[toIndex] = currentPlayer;
       room.gameState.tokenToMoveIndex = null;
     } else if (moveType === 'cancel-relocate') {
+      // Validate: Must be relocating
+      if (room.gameState.tokenToMoveIndex === null || room.gameState.tokenToMoveIndex !== fromIndex) {
+        socket.emit('error', { message: 'Invalid cancel. No token being relocated.' });
+        return;
+      }
       newSquares[fromIndex] = currentPlayer;
       room.gameState.tokenToMoveIndex = null;
+    } else {
+      socket.emit('error', { message: 'Invalid move type' });
+      return;
     }
 
     room.gameState.squares = newSquares;

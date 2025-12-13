@@ -291,8 +291,14 @@ function App() {
       return
     }
 
-    // Allow clicking on your own tokens at any time to relocate them (if they can move)
+    // Allow clicking on your own tokens ONLY when at token limit (must move, not place)
     if (valueAtIndex === currentPlayer) {
+      // CRITICAL: Can only pick up tokens when at token limit (3 tokens)
+      // If under limit, player must place new tokens, not move existing ones
+      if (currentPlayerTokenCount < TOKEN_LIMIT) {
+        return // Must place new tokens when under limit
+      }
+      
       // Check if this token can move before allowing relocation
       if (!canTokenMove(squares, index)) {
         return
@@ -313,6 +319,8 @@ function App() {
       return
     }
 
+    // CRITICAL: Can only place new tokens when under token limit
+    // If at limit (3 tokens), must move existing tokens instead
     if (!canPlaceNewToken) {
       return
     }

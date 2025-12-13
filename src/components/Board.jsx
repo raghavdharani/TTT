@@ -21,8 +21,13 @@ function Board({
 
     // When relocating, allow placing on empty adjacent squares OR switching to another token
     if (isRelocating) {
+      // CRITICAL: When relocating, player must be at token limit
       // Allow switching to a different token of the same player (if it can move)
       if (value === currentPlayer) {
+        // Can only switch if at token limit (should always be true when relocating, but check for safety)
+        if (currentPlayerTokenCount < tokenLimit) {
+          return false
+        }
         return canTokenMove(squares, index)
       }
       // Enable empty squares if adjacent to the token being moved OR it's the original location
@@ -37,8 +42,14 @@ function Board({
       return currentPlayerTokenCount < tokenLimit
     }
 
-    // Player's own tokens are enabled only if they can move
+    // Player's own tokens are enabled ONLY if:
+    // 1. Player is at token limit (must move, not place)
+    // 2. Token can actually move
     if (value === currentPlayer) {
+      // Can only pick up/move tokens when at token limit
+      if (currentPlayerTokenCount < tokenLimit) {
+        return false // Must place new tokens when under limit
+      }
       return canTokenMove(squares, index)
     }
 
