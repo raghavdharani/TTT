@@ -23,16 +23,37 @@ function GameStatus({
     
     if (seriesWinner) {
       if (seriesWinner === 'X') {
-        return `Series Winner: Player X wins ${xWins}-${oWins}!`
+        return (
+          <span className="flex items-center justify-center gap-2">
+            <span>Series Winner: Player</span>
+            <Token value="X" size="small" />
+            <span>wins {xWins}-{oWins}!</span>
+          </span>
+        )
       }
       if (seriesWinner === 'O') {
-        return `Series Winner: Player O wins ${oWins}-${xWins}!`
+        return (
+          <span className="flex items-center justify-center gap-2">
+            <span>Series Winner: Player</span>
+            <Token value="O" size="small" />
+            <span>wins {oWins}-{xWins}!</span>
+          </span>
+        )
       }
       return `Series Draw: ${xWins}-${oWins}`
     }
     
     const modeText = gameMode === 3 ? 'Best of 3' : 'Best of 5'
-    return `${modeText} - Game ${currentGame}: X: ${xWins} | O: ${oWins}`
+    return (
+      <span className="flex items-center justify-center gap-2">
+        <span>{modeText} - Game {currentGame}:</span>
+        <Token value="X" size="small" />
+        <span>{xWins}</span>
+        <span>|</span>
+        <Token value="O" size="small" />
+        <span>{oWins}</span>
+      </span>
+    )
   }
 
   const getStatusMessage = () => {
