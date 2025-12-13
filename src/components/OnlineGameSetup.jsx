@@ -16,9 +16,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
   // Hide server config in production (when VITE_SOCKET_URL is set)
   const isProduction = !!import.meta.env.VITE_SOCKET_URL;
   const [showServerConfig, setShowServerConfig] = useState(false);
-  const [serverUrl, setServerUrl] = useState(
-    import.meta.env.VITE_SOCKET_URL || localStorage.getItem('socket_server_url') || 'http://localhost:3001'
-  );
+  const [serverUrl, setServerUrl] = useState(() => {
+    // Prioritize env var over localStorage
+    return import.meta.env.VITE_SOCKET_URL || localStorage.getItem('socket_server_url') || 'http://localhost:3001';
+  });
   // #region agent log
   useEffect(() => {
     fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:20',message:'Server URL state initialized',data:{serverUrl,fromLocalStorage:localStorage.getItem('socket_server_url'),fromEnv:import.meta.env.VITE_SOCKET_URL,hasProtocol:serverUrl.startsWith('http://')||serverUrl.startsWith('https://')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
