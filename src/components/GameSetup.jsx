@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Token } from './tokens'
 
 function GameSetup({ onStart, onOnlineSelect }) {
   const [playMode, setPlayMode] = useState(null) // '2player' or 'computer'
@@ -164,63 +165,25 @@ function GameSetup({ onStart, onOnlineSelect }) {
             onClick={() => setStartingPlayer('X')}
             className={`px-4 py-4 rounded-lg border-2 transition-all flex items-center justify-center ${
               startingPlayer === 'X'
-                ? 'border-blue-500 bg-blue-50 shadow-md scale-105'
-                : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
+                ? 'border-red-500 bg-red-50 shadow-md scale-105'
+                : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
             }`}
           >
-            <svg
-              className="animate-pulse w-12 h-12"
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <line
-                x1="20"
-                y1="20"
-                x2="80"
-                y2="80"
-                stroke="#3b82f6"
-                strokeWidth="12"
-                strokeLinecap="round"
-                filter="drop-shadow(0 0 4px rgba(59, 130, 246, 0.8))"
-              />
-              <line
-                x1="80"
-                y1="20"
-                x2="20"
-                y2="80"
-                stroke="#3b82f6"
-                strokeWidth="12"
-                strokeLinecap="round"
-                filter="drop-shadow(0 0 4px rgba(59, 130, 246, 0.8))"
-              />
-            </svg>
+            <div className="animate-pulse">
+              <Token value="X" size="small" />
+            </div>
           </button>
           <button
             onClick={() => setStartingPlayer('O')}
             className={`px-4 py-4 rounded-lg border-2 transition-all flex items-center justify-center ${
               startingPlayer === 'O'
-                ? 'border-red-500 bg-red-50 shadow-md scale-105'
-                : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
+                ? 'border-blue-500 bg-blue-50 shadow-md scale-105'
+                : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
             }`}
           >
-            <svg
-              className="animate-spin w-12 h-12"
-              style={{ animationDuration: '2s' }}
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="50"
-                cy="50"
-                r="35"
-                stroke="#ef4444"
-                strokeWidth="12"
-                fill="none"
-                filter="drop-shadow(0 0 4px rgba(239, 68, 68, 0.8))"
-              />
-            </svg>
+            <div className="animate-spin" style={{ animationDuration: '2s' }}>
+              <Token value="O" size="small" />
+            </div>
           </button>
         </div>
       </div>
