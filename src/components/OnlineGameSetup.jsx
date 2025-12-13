@@ -13,9 +13,11 @@ function OnlineGameSetup({ onStart, onCancel }) {
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [roomCreated, setRoomCreated] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState(false);
+  // Hide server config in production (when VITE_SOCKET_URL is set)
+  const isProduction = !!import.meta.env.VITE_SOCKET_URL;
   const [showServerConfig, setShowServerConfig] = useState(false);
   const [serverUrl, setServerUrl] = useState(
-    localStorage.getItem('socket_server_url') || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
+    import.meta.env.VITE_SOCKET_URL || localStorage.getItem('socket_server_url') || 'http://localhost:3001'
   );
   // #region agent log
   useEffect(() => {
@@ -26,6 +28,8 @@ function OnlineGameSetup({ onStart, onCancel }) {
   // Use refs to access latest state values in event handlers
   const roomIdRef = useRef('');
   const playerSymbolRef = useRef(null);
+  const roomCreatedRef = useRef(false);
+  const waitingForPlayerRef = useRef(false);
   
   // Keep refs in sync with state
   useEffect(() => {
@@ -35,6 +39,14 @@ function OnlineGameSetup({ onStart, onCancel }) {
   useEffect(() => {
     playerSymbolRef.current = playerSymbol;
   }, [playerSymbol]);
+  
+  useEffect(() => {
+    roomCreatedRef.current = roomCreated;
+  }, [roomCreated]);
+  
+  useEffect(() => {
+    waitingForPlayerRef.current = waitingForPlayer;
+  }, [waitingForPlayer]);
 
   useEffect(() => {
     const sock = getSocket();
@@ -84,6 +96,9 @@ function OnlineGameSetup({ onStart, onCancel }) {
     sock.on('connect_error', handleConnectError);
 
     const handleRoomCreated = ({ roomId: createdRoomId, playerSymbol: symbol }) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:86',message:'Room created event received',data:{roomId:createdRoomId,playerSymbol:symbol},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       setRoomId(createdRoomId);
       setPlayerSymbol(symbol);
       setRoomCreated(true);
@@ -165,9 +180,29 @@ function OnlineGameSetup({ onStart, onCancel }) {
       return;
     }
 
+    if (!socket || !socket.connected) {
+      setError('Not connected to server. Please wait for connection or check server URL.');
+      return;
+    }
+
     setIsConnecting(true);
     setError(null);
+    setWaitingForPlayer(false);
+    setRoomCreated(false);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:162',message:'Creating room',data:{gameMode,startingPlayer,socketConnected:socket.connected,socketId:socket.id},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
+    
     socket.emit('create-room', { gameMode, startingPlayer });
+    
+    // Set a timeout to show error if room creation doesn't respond
+    setTimeout(() => {
+      if (!roomCreatedRef.current && !waitingForPlayerRef.current) {
+        setError('Failed to create room. Please try again.');
+        setIsConnecting(false);
+      }
+    }, 5000);
   };
 
   const handleJoinRoom = () => {
@@ -253,14 +288,15 @@ function OnlineGameSetup({ onStart, onCancel }) {
         Online Multiplayer
       </h2>
 
-      {/* Server Configuration */}
-      <div className="mb-4">
-        <button
-          onClick={() => setShowServerConfig(!showServerConfig)}
-          className="text-sm text-blue-600 hover:text-blue-800 underline"
-        >
-          {showServerConfig ? 'Hide' : 'Configure'} Server URL
-        </button>
+      {/* Server Configuration - Only show in development */}
+      {!isProduction && (
+        <div className="mb-4">
+          <button
+            onClick={() => setShowServerConfig(!showServerConfig)}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            {showServerConfig ? 'Hide' : 'Configure'} Server URL
+          </button>
         {showServerConfig && (
           <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -321,7 +357,8 @@ function OnlineGameSetup({ onStart, onCancel }) {
             </p>
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Connection Status */}
       <div className={`mb-4 p-3 rounded-lg text-sm text-center ${
