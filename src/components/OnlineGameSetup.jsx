@@ -281,38 +281,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
     socket.emit('player-ready');
   };
 
-  if (waitingForPlayer && roomCreated) {
-    return (
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
-          Waiting for Player...
-        </h2>
-        <div className="text-center mb-6">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-lg font-semibold text-gray-700 mb-2">Room ID:</p>
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-4">
-            <p className="text-4xl font-bold text-blue-600 font-mono tracking-wider">{roomId}</p>
-          </div>
-          <p className="text-sm text-gray-600 mb-2">
-            Share this room ID with your friend to play together!
-          </p>
-          <p className="text-xs text-gray-500">
-            Your symbol: <span className="font-bold text-lg">{playerSymbol}</span>
-          </p>
-        </div>
-        <button
-          onClick={onCancel}
-          className="w-full px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    );
-  }
-
   const currentSocket = socket || getSocket();
   
   // Update connection status when socket state changes
+  // CRITICAL: This hook MUST be called before any conditional returns
   useEffect(() => {
     if (!currentSocket) {
       setConnectionStatus(false);
@@ -342,6 +314,36 @@ function OnlineGameSetup({ onStart, onCancel }) {
   }, [currentSocket]);
   
   const isConnected = connectionStatus;
+
+  // Conditional return AFTER all hooks have been called
+  if (waitingForPlayer && roomCreated) {
+    return (
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+          Waiting for Player...
+        </h2>
+        <div className="text-center mb-6">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-lg font-semibold text-gray-700 mb-2">Room ID:</p>
+          <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-4">
+            <p className="text-4xl font-bold text-blue-600 font-mono tracking-wider">{roomId}</p>
+          </div>
+          <p className="text-sm text-gray-600 mb-2">
+            Share this room ID with your friend to play together!
+          </p>
+          <p className="text-xs text-gray-500">
+            Your symbol: <span className="font-bold text-lg">{playerSymbol}</span>
+          </p>
+        </div>
+        <button
+          onClick={onCancel}
+          className="w-full px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
