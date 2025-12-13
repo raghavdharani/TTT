@@ -269,9 +269,9 @@ io.on('connection', (socket) => {
     room.gameState.squares = result.squares;
     room.gameState.tokenToMoveIndex = result.tokenToMoveIndex;
 
-    // Check for winner or draw (simplified - you'll need to import the actual logic)
-    const winner = calculateWinner(newSquares);
-    const isDraw = checkDraw(newSquares);
+    // Check for winner or draw
+    const winner = calculateWinner(result.squares);
+    const isDraw = checkDraw(result.squares);
 
     if (winner) {
       room.gameState.winner = winner;
