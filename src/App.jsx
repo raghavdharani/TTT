@@ -60,7 +60,7 @@ function App() {
   const currentPlayerTokenCount = countTokens(squares, currentPlayer)
   const isRelocating = tokenToMoveIndex !== null
   const canPlaceNewTokenResult = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
-  const canPlaceNewToken = canPlaceNewTokenResult.valid
+  const canPlaceNewTokenValid = canPlaceNewTokenResult.valid
   
   // Determine if current player is computer
   // In computer mode, the computer always plays as 'O'
@@ -625,7 +625,7 @@ function App() {
           winner={winner}
           gameOver={gameOver}
           isRelocating={isRelocating}
-          canPlaceNewToken={canPlaceNewToken}
+          canPlaceNewToken={canPlaceNewTokenValid}
           currentPlayerTokenCount={currentPlayerTokenCount}
           tokenLimit={TOKEN_LIMIT}
           gameMode={gameMode}
