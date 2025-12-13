@@ -1,9 +1,12 @@
 /**
  * Reusable X Token Component
  * Sharp, slim red cross token
+ * @param {string} size - 'small', 'default', or 'large'
+ * @param {string} className - Additional CSS classes
+ * @param {boolean} animated - Whether to apply pulse animation
  */
 
-function XToken({ size = 'default', className = '' }) {
+function XToken({ size = 'default', className = '', animated = false }) {
   // Size classes: 'small', 'default', 'large'
   const sizeClasses = {
     small: 'w-12 h-12 sm:w-14 sm:h-14',
@@ -12,10 +15,11 @@ function XToken({ size = 'default', className = '' }) {
   }
 
   const sizeClass = sizeClasses[size] || sizeClasses.default
+  const animationClass = animated ? 'animate-pulse' : ''
 
   return (
     <svg
-      className={`${sizeClass} ${className}`}
+      className={`${sizeClass} ${animationClass} ${className}`}
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

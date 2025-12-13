@@ -169,9 +169,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
                 : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
             }`}
           >
-            <div className="animate-pulse">
-              <Token value="X" size="small" />
-            </div>
+            <Token value="X" size="small" animated={true} />
           </button>
           <button
             onClick={() => setStartingPlayer('O')}
@@ -181,9 +179,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
                 : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
             }`}
           >
-            <div className="animate-spin" style={{ animationDuration: '2s' }}>
-              <Token value="O" size="small" />
-            </div>
+            <Token value="O" size="small" animated={true} spinDuration={2} />
           </button>
         </div>
       </div>
