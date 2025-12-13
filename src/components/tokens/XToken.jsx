@@ -1,12 +1,12 @@
 /**
  * Reusable X Token Component
- * Sharp, slim red cross token
+ * Solid filled red cross token with subtle pulse animation
  * @param {string} size - 'small', 'default', or 'large'
  * @param {string} className - Additional CSS classes
- * @param {boolean} animated - Whether to apply pulse animation
+ * @param {boolean} animated - Whether to apply pulse animation (default: true)
  */
 
-function XToken({ size = 'default', className = '', animated = false }) {
+function XToken({ size = 'default', className = '', animated = true }) {
   // Size classes: 'small', 'default', 'large'
   const sizeClasses = {
     small: 'w-12 h-12 sm:w-14 sm:h-14',
@@ -40,30 +40,13 @@ function XToken({ size = 'default', className = '', animated = false }) {
           </feMerge>
         </filter>
       </defs>
-      <line
-        x1="22"
-        y1="22"
-        x2="78"
-        y2="78"
-        stroke="#dc2626"
-        strokeWidth="10"
-        strokeLinecap="round"
-        strokeLinejoin="miter"
-        vectorEffect="non-scaling-stroke"
-        filter="url(#x-glow)"
-      />
-      <line
-        x1="78"
-        y1="22"
-        x2="22"
-        y2="78"
-        stroke="#dc2626"
-        strokeWidth="10"
-        strokeLinecap="round"
-        strokeLinejoin="miter"
-        vectorEffect="non-scaling-stroke"
-        filter="url(#x-glow)"
-      />
+      {/* Solid filled X - using two rotated rectangles */}
+      <g transform="rotate(45 50 50)">
+        <rect x="35" y="10" width="30" height="80" rx="5" fill="#dc2626" filter="url(#x-glow)" />
+      </g>
+      <g transform="rotate(-45 50 50)">
+        <rect x="35" y="10" width="30" height="80" rx="5" fill="#dc2626" filter="url(#x-glow)" />
+      </g>
     </svg>
   )
 }

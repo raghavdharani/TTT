@@ -12,13 +12,14 @@ export { XToken, OToken }
 /**
  * Token component factory
  * Returns the appropriate token component based on value
+ * All tokens are animated by default (X pulses, O rotates slowly)
  * @param {string} value - 'X' or 'O'
  * @param {string} size - 'small', 'default', or 'large'
  * @param {string} className - Additional CSS classes
- * @param {boolean} animated - Whether to apply animations (pulse for X, spin for O)
- * @param {number} spinDuration - Animation duration for O token in seconds (default: 2)
+ * @param {boolean} animated - Whether to apply animations (pulse for X, spin for O, default: true)
+ * @param {number} spinDuration - Animation duration for O token in seconds (default: 3 for slow rotation)
  */
-export const Token = ({ value, size = 'default', className = '', animated = false, spinDuration = 2 }) => {
+export const Token = ({ value, size = 'default', className = '', animated = true, spinDuration = 3 }) => {
   if (value === 'X') {
     return <XToken size={size} className={className} animated={animated} />
   }

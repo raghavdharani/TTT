@@ -169,7 +169,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
                 : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
             }`}
           >
-            <Token value="X" size="small" animated={true} />
+            <Token value="X" size="small" />
           </button>
           <button
             onClick={() => setStartingPlayer('O')}
@@ -179,7 +179,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
                 : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
             }`}
           >
-            <Token value="O" size="small" animated={true} spinDuration={2} />
+            <Token value="O" size="small" />
           </button>
         </div>
       </div>

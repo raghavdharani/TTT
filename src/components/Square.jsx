@@ -23,7 +23,7 @@ function Square({ value, onClick, disabled, index }) {
       aria-label={ariaLabel}
       aria-disabled={disabled}
     >
-      <Token value={value} size="default" animated={true} />
+      <Token value={value} size="default" />
     </button>
   )
 }

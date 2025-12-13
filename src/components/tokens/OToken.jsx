@@ -1,13 +1,13 @@
 /**
  * Reusable O Token Component
- * Sharp, slim blue circle token
+ * Solid filled blue circle token with slow rotation
  * @param {string} size - 'small', 'default', or 'large'
  * @param {string} className - Additional CSS classes
- * @param {boolean} animated - Whether to apply spin animation
- * @param {number} spinDuration - Animation duration in seconds (default: 2)
+ * @param {boolean} animated - Whether to apply spin animation (default: true)
+ * @param {number} spinDuration - Animation duration in seconds (default: 3 for slow rotation)
  */
 
-function OToken({ size = 'default', className = '', animated = false, spinDuration = 2 }) {
+function OToken({ size = 'default', className = '', animated = true, spinDuration = 3 }) {
   // Size classes: 'small', 'default', 'large'
   const sizeClasses = {
     small: 'w-12 h-12 sm:w-14 sm:h-14',
@@ -43,14 +43,12 @@ function OToken({ size = 'default', className = '', animated = false, spinDurati
           </feMerge>
         </filter>
       </defs>
+      {/* Solid filled circle */}
       <circle
         cx="50"
         cy="50"
-        r="36"
-        stroke="#2563eb"
-        strokeWidth="10"
-        fill="none"
-        vectorEffect="non-scaling-stroke"
+        r="40"
+        fill="#2563eb"
         filter="url(#o-glow)"
       />
     </svg>
