@@ -245,37 +245,24 @@ io.on('connection', (socket) => {
   socket.on('make-move', ({ moveType, fromIndex, toIndex }) => {
     const playerInfo = players.get(socket.id);
     if (!playerInfo) {
-      console.error(`[make-move] Player ${socket.id} not found in players map`);
-      socket.emit('error', { message: 'Not in a room. Please rejoin the game.' });
+      console.error(`[make-move] Player ${socket.id} not found in players map. Current players:`, Array.from(players.keys()));
+      socket.emit('error', { message: 'Not in a room' });
       return;
     }
 
     const room = rooms.get(playerInfo.roomId);
     if (!room) {
-      console.error(`[make-move] Room ${playerInfo.roomId} not found for player ${socket.id}`);
-      socket.emit('error', { message: 'Room not found. Please rejoin the game.' });
+      console.error(`[make-move] Room ${playerInfo.roomId} not found for player ${socket.id}. Available rooms:`, Array.from(rooms.keys()));
+      socket.emit('error', { message: 'Room not found' });
       return;
     }
 
-    const player = room.players.find((p) => p.id === socket.id);
+    let player = room.players.find((p) => p.id === socket.id);
     if (!player) {
-      console.error(`[make-move] Player ${socket.id} not found in room ${playerInfo.roomId}`);
-      // Try to re-add player to room if they were in it before
-      const existingPlayer = room.players.find((p) => p.symbol === 'X' || p.symbol === 'O');
-      if (existingPlayer && room.players.length < 2) {
-        // Re-add player if room exists but player was lost
-        room.players.push({
-          id: socket.id,
-          symbol: existingPlayer.symbol === 'X' ? 'O' : 'X',
-          ready: false,
-        });
-        players.set(socket.id, { roomId: playerInfo.roomId, playerId: socket.id });
-        socket.join(playerInfo.roomId);
-        console.log(`[make-move] Re-added player ${socket.id} to room ${playerInfo.roomId}`);
-      } else {
-        socket.emit('error', { message: 'Player not found in room. Please rejoin the game.' });
-        return;
-      }
+      console.error(`[make-move] Player ${socket.id} not found in room ${playerInfo.roomId}. Room players:`, room.players.map(p => p.id));
+      // Don't try to auto-rejoin - this indicates a serious state issue
+      socket.emit('error', { message: 'Player not found in room' });
+      return;
     }
 
     const currentPlayer = room.gameState.xIsNext ? 'X' : 'O';
