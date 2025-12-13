@@ -2,11 +2,11 @@
  * Item Details Filter Section
  */
 
-import React from 'react';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '../../ui/accordion';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { MultiSelect } from '../../ui/multi-select';
 
 interface ItemDetailsSectionProps {
   value?: {
@@ -17,7 +17,7 @@ interface ItemDetailsSectionProps {
     itemNumber?: string;
     keywords?: string;
     size?: string;
-    color?: string;
+    color?: string[];
     alias?: string;
     origin?: string;
   };
@@ -29,7 +29,7 @@ interface ItemDetailsSectionProps {
     itemNumber?: string;
     keywords?: string;
     size?: string;
-    color?: string;
+    color?: string[];
     alias?: string;
     origin?: string;
   }) => void;
@@ -131,25 +131,23 @@ export function ItemDetailsSection({ value, onChange }: ItemDetailsSectionProps)
         </div>
         <div className="space-y-2">
           <Label htmlFor="color" className="text-gray-700">Color</Label>
-          <Select
-            value={value?.color || ''}
-            onValueChange={(val) => handleChange('color', val)}
-          >
-            <SelectTrigger id="color" className="rounded-lg">
-              <SelectValue placeholder="Select color" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Asst-999">Asst-999</SelectItem>
-              <SelectItem value="Beige-250">Beige-250</SelectItem>
-              <SelectItem value="Black-1">Black-1</SelectItem>
-              <SelectItem value="Blue-400">Blue-400</SelectItem>
-              <SelectItem value="Brown-300">Brown-300</SelectItem>
-              <SelectItem value="Gray">Gray</SelectItem>
-              <SelectItem value="Navy">Navy</SelectItem>
-              <SelectItem value="Red">Red</SelectItem>
-              <SelectItem value="White">White</SelectItem>
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            id="color"
+            options={[
+              { value: 'Asst-999', label: 'Asst-999' },
+              { value: 'Beige-250', label: 'Beige-250' },
+              { value: 'Black-1', label: 'Black-1' },
+              { value: 'Blue-400', label: 'Blue-400' },
+              { value: 'Brown-300', label: 'Brown-300' },
+              { value: 'Gray', label: 'Gray' },
+              { value: 'Navy', label: 'Navy' },
+              { value: 'Red', label: 'Red' },
+              { value: 'White', label: 'White' },
+            ]}
+            value={value?.color || []}
+            onChange={(selected) => onChange?.({ ...value, color: selected.length > 0 ? selected : undefined })}
+            placeholder="Select color(s)"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="alias" className="text-gray-700">Alias</Label>

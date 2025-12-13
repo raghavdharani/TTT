@@ -34,72 +34,104 @@ export function App() {
     const saved = localStorage.getItem('filterPanelOpen');
     return saved !== null ? saved === 'true' : true;
   });
+  
+  // Track pending changes in ResultsGrid
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
   // Persist filter panel state
   useEffect(() => {
     localStorage.setItem('filterPanelOpen', filterPanelOpen.toString());
   }, [filterPanelOpen]);
+  
+  // Navigation guard - warn user if they try to leave with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasPendingChanges) {
+        e.preventDefault();
+        // Modern browsers ignore custom messages, but we can still set returnValue
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasPendingChanges]);
 
-  // Generate mock data for demonstration
+  // Generate mock data for demonstration - matching screenshot data
   const generateMockData = () => {
     return [
       {
         article_id: '1',
-        style: 'ABC-123',
-        upc: '123456789012',
-        description: 'Classic Cotton T-Shirt - Blue',
-        pos_description: 'Cotton T-Shirt Blue',
+        style: 'R19J102',
+        upc: '1234000007',
+        first_digits: '',
+        description: 'Metallic Short Tassel Earrings',
+        pos_description: 'Tassel Earrings',
         item_number: 'ITEM-001',
-        keywords: 'cotton, t-shirt, blue, casual',
-        size: 'M',
-        color: 'Blue-400',
-        alias: 'T-Shirt Blue',
+        keywords: 'metallic, tassel, earrings, jewelry',
+        size: 'OS',
+        color_name: 'Black-1',
+        vendor_color: 'White',
+        alias: 'Tassel Earrings Black',
         origin: 'USA',
-        department: 'Apparel-01',
-        class: 'Tops-201',
-        subclass: 'T-Shirts-301',
+        department: 'Accessories-02',
+        class: 'Earrings-400',
+        subclass: 'General-000',
         sub_dept: 'General-000',
         attribute1: 'General-000',
         attribute2: 'General-000',
-        attribute3: 'Best Seller-202',
-        last_modified_date: new Date().toISOString(),
-        creation_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        season: 'Spring',
-        active_code: 'Active',
-        status: 'Active',
-        stat3: 'ALL',
+        attribute3: 'On Sale-202',
+        last_modified_date: new Date('2025-01-11').toISOString(),
+        creation_date: new Date('2024-10-15').toISOString(),
+        season: '',
+        active_code: 'N',
+        status: 'N',
+        stat3: '',
+        available_on_web: 'N',
+        web_back_order_eligible: 'N',
+        alt_style_sku_upc: '1234000007',
+        prepack: 0,
+        item_picture: 'https://i1.adis.ws/i/oscardelarenta/R19J102_1',
+        employee_price: 0.00,
+        markdown_date: null,
+        outlet_markdown_date: null,
         // Primary vendor data
-        primary_vendor: 'Vendor A',
-        primary_retail_price: 29.99,
-        primary_wholesale_price: 15.00,
-        primary_first_cost: 12.00,
-        primary_retail_markdown_price: 24.99,
-        primary_outlet_price: 19.99,
-        primary_outlet_markdown_price: 15.99,
-        primary_prepack: 1,
-        primary_active_code: 'Active',
-        vendor_color: 'Blue',
+        primary_vendor: 'Oscar de la Renta',
+        primary_retail_price: 345.00,
+        primary_wholesale_price: 0.00,
+        primary_first_cost: 100.00,
+        primary_retail_markdown_price: 0.00,
+        primary_outlet_price: 345.00,
+        primary_outlet_markdown_price: 0.00,
+        primary_prepack: 0,
+        primary_active_code: 'N',
         // Secondary vendor data
-        secondary_vendor: 'Vendor D',
-        secondary_retail_price: 27.99,
-        secondary_wholesale_price: 14.00,
-        secondary_first_cost: 11.00,
-        secondary_retail_markdown_price: 22.99,
-        secondary_outlet_price: 18.99,
-        secondary_outlet_markdown_price: 14.99,
-        secondary_prepack: 1,
-        secondary_active_code: 'Active',
+        secondary_vendor: 'Oscar de la Renta',
+        secondary_retail_price: 345.00,
+        secondary_wholesale_price: 0.00,
+        secondary_first_cost: 100.00,
+        secondary_retail_markdown_price: 0.00,
+        secondary_outlet_price: 345.00,
+        secondary_outlet_markdown_price: 0.00,
+        secondary_prepack: 0,
+        secondary_active_code: 'N',
       },
       {
         article_id: '2',
         style: 'XYZ-456',
         upc: '234567890123',
+        first_digits: '',
         description: 'Denim Jeans - Dark Wash',
         pos_description: 'Jeans Dark Wash',
         item_number: 'ITEM-002',
         keywords: 'denim, jeans, dark, wash',
         size: 'L',
-        color: 'Black-1',
+        color_name: 'Black-1',
+        vendor_color: 'Dark Blue',
         alias: 'Jeans Dark',
         origin: 'Mexico',
         department: 'Apparel-01',
@@ -115,6 +147,14 @@ export function App() {
         active_code: 'Active',
         status: 'Active',
         stat3: 'ALL',
+        available_on_web: 'Y',
+        web_back_order_eligible: 'N',
+        alt_style_sku_upc: '234567890123',
+        prepack: 2,
+        item_picture: 'https://i1.adis.ws/i/vendorb/XYZ-456_1',
+        employee_price: 0.00,
+        markdown_date: null,
+        outlet_markdown_date: null,
         // Primary vendor data
         primary_vendor: 'Vendor B',
         primary_retail_price: 79.99,
@@ -125,7 +165,6 @@ export function App() {
         primary_outlet_markdown_price: 49.99,
         primary_prepack: 2,
         primary_active_code: 'Active',
-        vendor_color: 'Dark Blue',
         // Secondary vendor data
         secondary_vendor: 'Vendor E',
         secondary_retail_price: 75.99,
@@ -1015,6 +1054,15 @@ export function App() {
       // Use setTimeout to ensure state is updated before calling performSearch
       const timer = setTimeout(() => {
         console.log('Triggering performSearch');
+        // Check pending changes before auto-searching
+        if (hasPendingChanges) {
+          if (!window.confirm(
+            'You have unsaved changes. If you continue, all unsaved changes will be lost.\n\n' +
+            'Do you want to continue and discard your changes?'
+          )) {
+            return; // User cancelled, don't perform search
+          }
+        }
         performSearch();
       }, 100);
       return () => clearTimeout(timer);
@@ -1031,16 +1079,31 @@ export function App() {
 
   // Handle search query change
   const handleSearchChange = (query: string) => {
+    // Only check pending changes if query actually changed (not just typing)
+    // We'll check on search execution instead
     dispatch(setSearchQuery(query));
+  };
+
+  // Helper function to check for pending changes and warn user
+  const checkPendingChanges = (): boolean => {
+    if (hasPendingChanges) {
+      return window.confirm(
+        'You have unsaved changes. If you continue, all unsaved changes will be lost.\n\n' +
+        'Do you want to continue and discard your changes?'
+      );
+    }
+    return true;
   };
 
   // Handle search execution
   const handleSearch = () => {
+    if (!checkPendingChanges()) return;
     performSearch();
   };
 
   // Handle filter application
   const handleApplyFilters = (filters: SearchFilters, activeFilters: { key: string; label: string }[]) => {
+    if (!checkPendingChanges()) return;
     dispatch(setFilters(filters));
     dispatch(setActiveFilters(activeFilters));
     // Update vendor mode if it's in the filters
@@ -1052,6 +1115,7 @@ export function App() {
 
   // Handle filter removal
   const handleRemoveFilter = (key: string) => {
+    if (!checkPendingChanges()) return;
     // Parse the filter key to determine which filter to remove
     const currentFilters = searchState.filters || {};
     const updatedFilters: SearchFilters = { ...currentFilters };
@@ -1310,12 +1374,14 @@ export function App() {
 
   // Handle sort change
   const handleSortChange = (sortConfig: { field: string; direction: 'asc' | 'desc' }) => {
+    if (!checkPendingChanges()) return;
     dispatch(setSortConfig(sortConfig));
     performSearch();
   };
 
   // Handle vendor mode change
   const handleVendorModeChange = (mode: 'primary' | 'secondary') => {
+    if (!checkPendingChanges()) return;
     dispatch(setVendorMode(mode));
     // Trigger new search with updated vendor mode
     performSearch();
@@ -1584,6 +1650,7 @@ export function App() {
 
   // Handle saved session load
   const handleLoadSession = (session: SearchSession) => {
+    if (!checkPendingChanges()) return;
     dispatch(setSearchQuery(session.searchQuery || ''));
     if (session.vendorMode) {
       dispatch(setVendorMode(session.vendorMode));
@@ -1756,27 +1823,6 @@ export function App() {
 
         <main className="flex-1">
           <div className="p-6">
-            {/* Secondary Vendor Mode Banner */}
-            {searchState.vendorMode === 'secondary' && (
-              <div className="mb-4 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg className="h-5 w-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-amber-900 mb-1">
-                      Secondary Vendor Editing Mode
-                    </h3>
-                    <p className="text-sm text-amber-800">
-                      You are currently editing secondary vendor data. Only <strong>price fields (Retail Price, Wholesale Price)</strong> and <strong>Status</strong> are editable. All other fields are displayed for reference but cannot be modified.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Show active filters if any are applied */}
             {searchState.activeFilters.length > 0 && (
               <ActiveFilters
@@ -1820,6 +1866,7 @@ export function App() {
                   loading={searchState.loading}
                   hasSearchCriteria={hasCriteria}
                   vendorMode={searchState.vendorMode}
+                  onPendingChangesChange={setHasPendingChanges}
                 onUpdate={(articleId, field, value) => {
                   try {
                     // Update the result in state

@@ -49,6 +49,7 @@ export function StatusAttributesSection({ value, onChange }: StatusAttributesSec
             <SelectContent>
               <SelectItem value="ALL">ALL</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="N">N</SelectItem>
               <SelectItem value="Inactive">Inactive</SelectItem>
               <SelectItem value="Discontinued">Discontinued</SelectItem>
             </SelectContent>
@@ -66,6 +67,7 @@ export function StatusAttributesSection({ value, onChange }: StatusAttributesSec
             <SelectContent>
               <SelectItem value="All">All</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="N">N</SelectItem>
               <SelectItem value="Inactive">Inactive</SelectItem>
               <SelectItem value="Pending">Pending</SelectItem>
             </SelectContent>

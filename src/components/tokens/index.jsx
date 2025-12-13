@@ -3,8 +3,11 @@
  * Reusable token components for consistent UI throughout the game
  */
 
-export { default as XToken } from './XToken'
-export { default as OToken } from './OToken'
+import XToken from './XToken'
+import OToken from './OToken'
+
+// Re-export for direct imports
+export { XToken, OToken }
 
 /**
  * Token component factory

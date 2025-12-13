@@ -15,7 +15,7 @@ export interface FilterValues {
     itemNumber?: string;
     keywords?: string;
     size?: string;
-    color?: string;
+    color?: string[]; // Multi-select
     alias?: string;
     origin?: string;
   };
@@ -23,9 +23,9 @@ export interface FilterValues {
     departments?: string[];
     classes?: string[];
     subclasses?: string[];
-    subDept?: string;
-    attribute1?: string;
-    attribute2?: string;
+    subDept?: string[]; // Multi-select
+    attribute1?: string[]; // Multi-select
+    attribute2?: string[]; // Multi-select
     attribute3?: string[];
   };
   vendor: {
@@ -116,8 +116,26 @@ export function useFilterState(initialFilters?: SearchFilters) {
     };
 
     return {
-      itemDetails: filters.itemDetails || {},
-      hierarchy: filters.hierarchy || {},
+      itemDetails: filters.itemDetails ? {
+        ...filters.itemDetails,
+        // Ensure color is an array
+        color: filters.itemDetails.color 
+          ? (Array.isArray(filters.itemDetails.color) ? filters.itemDetails.color : [filters.itemDetails.color])
+          : undefined,
+      } : {},
+      hierarchy: filters.hierarchy ? {
+        ...filters.hierarchy,
+        // Ensure subDept, attribute1, attribute2 are arrays
+        subDept: filters.hierarchy.subDept 
+          ? (Array.isArray(filters.hierarchy.subDept) ? filters.hierarchy.subDept : [filters.hierarchy.subDept])
+          : undefined,
+        attribute1: filters.hierarchy.attribute1 
+          ? (Array.isArray(filters.hierarchy.attribute1) ? filters.hierarchy.attribute1 : [filters.hierarchy.attribute1])
+          : undefined,
+        attribute2: filters.hierarchy.attribute2 
+          ? (Array.isArray(filters.hierarchy.attribute2) ? filters.hierarchy.attribute2 : [filters.hierarchy.attribute2])
+          : undefined,
+      } : {},
       vendor: filters.vendor || {},
       pricing: filters.pricing || {},
       status: convertStatus(filters.status),
@@ -125,8 +143,8 @@ export function useFilterState(initialFilters?: SearchFilters) {
         lastModified: convertDateRange(filters.dates?.lastModified),
         creation: convertDateRange(filters.dates?.creation),
       },
-      activity: filters.activity || {},
-      sorting: filters.sorting || {},
+      activity: {},
+      sorting: {},
     };
   }, []);
 
@@ -181,7 +199,7 @@ export function useFilterState(initialFilters?: SearchFilters) {
       filterValues.itemDetails.itemNumber ||
       filterValues.itemDetails.keywords ||
       filterValues.itemDetails.size || 
-      filterValues.itemDetails.color ||
+      filterValues.itemDetails.color?.length ||
       filterValues.itemDetails.alias ||
       filterValues.itemDetails.origin
     );
@@ -191,9 +209,9 @@ export function useFilterState(initialFilters?: SearchFilters) {
       filterValues.hierarchy.departments?.length || 
       filterValues.hierarchy.classes?.length || 
       filterValues.hierarchy.subclasses?.length ||
-      filterValues.hierarchy.subDept ||
-      filterValues.hierarchy.attribute1 ||
-      filterValues.hierarchy.attribute2 ||
+      filterValues.hierarchy.subDept?.length ||
+      filterValues.hierarchy.attribute1?.length ||
+      filterValues.hierarchy.attribute2?.length ||
       filterValues.hierarchy.attribute3?.length
     );
 
@@ -230,8 +248,22 @@ export function useFilterState(initialFilters?: SearchFilters) {
     );
 
     return {
-      itemDetails: hasItemDetails ? filterValues.itemDetails : undefined,
-      hierarchy: hasHierarchy ? filterValues.hierarchy : undefined,
+      itemDetails: hasItemDetails ? {
+        style: filterValues.itemDetails.style,
+        sku: filterValues.itemDetails.sku,
+        description: filterValues.itemDetails.description,
+        size: filterValues.itemDetails.size,
+        color: filterValues.itemDetails.color?.length ? filterValues.itemDetails.color : undefined,
+      } : undefined,
+      hierarchy: hasHierarchy ? {
+        departments: filterValues.hierarchy.departments,
+        classes: filterValues.hierarchy.classes,
+        subclasses: filterValues.hierarchy.subclasses,
+        subDept: filterValues.hierarchy.subDept?.length ? filterValues.hierarchy.subDept : undefined,
+        attribute1: filterValues.hierarchy.attribute1?.length ? filterValues.hierarchy.attribute1 : undefined,
+        attribute2: filterValues.hierarchy.attribute2?.length ? filterValues.hierarchy.attribute2 : undefined,
+        attribute3: filterValues.hierarchy.attribute3,
+      } : undefined,
       vendor: filterValues.vendor.vendorName?.length || 
               filterValues.vendor.vendorColor ||
               filterValues.vendor.mode
@@ -293,8 +325,10 @@ export function useFilterState(initialFilters?: SearchFilters) {
     if (filterValues.itemDetails.size) {
       active.push({ key: 'item-size', label: `Size: ${filterValues.itemDetails.size}` });
     }
-    if (filterValues.itemDetails.color) {
-      active.push({ key: 'item-color', label: `Color: ${filterValues.itemDetails.color}` });
+    if (filterValues.itemDetails.color?.length) {
+      filterValues.itemDetails.color.forEach(color => {
+        active.push({ key: `item-color-${color}`, label: `Color: ${color}` });
+      });
     }
     if (filterValues.itemDetails.alias) {
       active.push({ key: 'item-alias', label: `Alias: ${filterValues.itemDetails.alias}` });
@@ -319,14 +353,20 @@ export function useFilterState(initialFilters?: SearchFilters) {
         active.push({ key: `subclass-${subcls}`, label: `Subclass: ${subcls}` });
       });
     }
-    if (filterValues.hierarchy.subDept) {
-      active.push({ key: 'hierarchy-sub-dept', label: `Sub Dept: ${filterValues.hierarchy.subDept}` });
+    if (filterValues.hierarchy.subDept?.length) {
+      filterValues.hierarchy.subDept.forEach(subDept => {
+        active.push({ key: `hierarchy-sub-dept-${subDept}`, label: `Sub Dept: ${subDept}` });
+      });
     }
-    if (filterValues.hierarchy.attribute1) {
-      active.push({ key: 'hierarchy-attribute1', label: `Attribute 1: ${filterValues.hierarchy.attribute1}` });
+    if (filterValues.hierarchy.attribute1?.length) {
+      filterValues.hierarchy.attribute1.forEach(attr => {
+        active.push({ key: `hierarchy-attribute1-${attr}`, label: `Attribute 1: ${attr}` });
+      });
     }
-    if (filterValues.hierarchy.attribute2) {
-      active.push({ key: 'hierarchy-attribute2', label: `Attribute 2: ${filterValues.hierarchy.attribute2}` });
+    if (filterValues.hierarchy.attribute2?.length) {
+      filterValues.hierarchy.attribute2.forEach(attr => {
+        active.push({ key: `hierarchy-attribute2-${attr}`, label: `Attribute 2: ${attr}` });
+      });
     }
     if (filterValues.hierarchy.attribute3?.length) {
       filterValues.hierarchy.attribute3.forEach(attr => {

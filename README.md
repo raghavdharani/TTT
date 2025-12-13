@@ -85,7 +85,7 @@ npm run preview
 
 ## Deployment
 
-### Deploy to Vercel
+### Deploy Frontend to Vercel
 
 This project is configured for easy deployment to Vercel.
 
@@ -120,6 +120,21 @@ This project is configured for easy deployment to Vercel.
 - Vercel will automatically detect the Vite configuration and deploy
 
 The `vercel.json` configuration file is already set up for optimal Vite deployment.
+
+### Deploy Online Multiplayer (Full Stack)
+
+To enable online multiplayer, you need to deploy both the frontend and the Socket.IO server:
+
+- **Frontend**: Deploy to Vercel (see above)
+- **Socket.IO Server**: Deploy to Railway or Render (supports persistent WebSocket connections)
+
+**Quick Start:**
+1. Deploy frontend to Vercel (get your Vercel URL)
+2. Deploy server to Railway or Render (get your server URL)
+3. Set `VITE_SOCKET_URL` environment variable in Vercel to your server URL
+4. Set `CLIENT_URL` environment variable on your server to your Vercel URL
+
+For detailed step-by-step instructions, see [DEPLOYMENT_VERCEL.md](./DEPLOYMENT_VERCEL.md)
 
 ## Testing
 

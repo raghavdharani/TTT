@@ -4,6 +4,7 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  root: __dirname, // Explicitly set root to prevent looking in parent directories
   plugins: [react()],
   resolve: {
     alias: {

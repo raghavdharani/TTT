@@ -1,0 +1,280 @@
+
+=== PAGE 1 ===
+Item Maintenance
+The Item Maintenance Application will allow the user the abilit y to mak e changes
+to the item master en masse.
+You can group items b y Style, St yle/Color , or modif y each
+Style/Color/Siz e individually .
+Field displa y can be configured to add fields from articles not present,
+to remo ve fields, to change labels or to change the order via a
+configur ation file. Contact y our KWI Customer Success Manager to
+configure these options.
+Input Screen - Hierarchy Tab11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 1/11
+=== PAGE 2 ===
+Process Overview
+1. First, y ou will define the criteria for the articles y ou wish to
+modif y by selecting hier archy, entering a SKU/UPC, a st yle, or
+season code, or use an y other field on the screen. Y ou can mak e
+more than 1 selection, and use criteria such as activ e and status
+codes, or in ventory activit y (see activit y tab).
+2. Click Search  to view the results of y our selections.
+3. Make your changes in the table. This can include (but not limited
+to) pricing and cost changes, hier archy reclassifications, item
+image URL updates, and status changes.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 2/11
+=== PAGE 3 ===
+4. Click on the checkbo xes for ev ery SKU/UPC that needs to be
+updated.
+5. Click Book  to sa ve all changes.
+Action Options:
+SearchUse the search button to retriev e information about specific SKUs. Searches are performed
+by entering information into an y field to define a group of SKUs. There is a limit to the
+number of records a search can perform. If y ou ex ceed that limit, y ou will be notified and
+must refine y our search b y entering more detailed information. A successful search will
+displa y the results. Wild Card searches will work on an y of the fields b y using the * k ey
+following the beginning portion of the data.
+CancelThis button will clear all fields without sa ving an y information and return to the previous
+screen.
+Selection Options:
+SKU/UPCA unique 10-digit numeric field to identif y the product. F or an industry
+standard UPC -A code, drop the first and last digits of the number .
+DepartmentHighest lev el of product hier archy. Select an y number of departments to
+show only items from that department.
+Class2nd lev el of product hier archy. Select an y number of classes to show only
+items from that class.
+Sub-Class3rd lev el of product hier archy. Select an y number of sub-classes to show
+only items from that sub-class.
+Sub-Dept4th lev el of product hier archy. Select an y number of sub-departments to
+show only items from that sub-department.
+Attribute 15th lev el of product hier archy. Select an y number of A ttribute 1's to show
+only items from that A ttribute 1 hier archy.
+Attribute 26th lev el of product hier archy. Select an y number of A ttribute 2's to show
+only items from that A ttribute 2 hier archy.
+Attribute 37th lev el of product hier archy. Select an y number of A ttribute 3's to show
+only items from that A ttribute 3 hier archy.
+Season A three char acter alphanumeric code for season.
+Vendor Color The v endor color of the item.
+Content An electiv e data entry field from the item master defined b y the client.
+Origin An electiv e data entry field from the item master defined b y the client.
+Size The siz e of the item.
+Color Linked data from the color table for selecting the color of the item.
+Vendor The primary v endor of the item.
+Description The full description of the item.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 3/11
+=== PAGE 4 ===
+Selection Options:
+Style The V endor St yle associated with an item.
+POS DescriptionThe POS description of the item. This is what will print on the register
+receipt. This is a 15-char acter field.
+Active Code A designation indicating Activ e status (Y/N) of the SKU/UPC.
+Status An electiv e single char acter field defined b y the client.
+Care An electiv e data entry field from the item master defined b y the client.
+Copy An electiv e data entry field from the item master defined b y the client.
+Current CostMay also be labeled "A verage Cost"or "Wholesale Price", this is the current
+inventory v alue cost.
+First Cost The current cost of product on new purchase orders.
+Retail Price The original retail price for retail locations.
+Retail Markdown Price The current selling price in R etail locations.
+Outlet Price The original retail price for outlet locations.
+Outlet Markdown Price The current selling price in outlet locations.
+Prepack The multiple unit purchase quantit y for the item.
+Label/Tick et An electiv e single char acter field defined b y the client (Stat3).
+Sort BySort options to sort output b y. Once the results are returned y ou can sort
+on an y of the columns b y clicking on the column headings.
+Group By
+Items can displa y at the St yle, St yle/Color or UPC
+(Style/Color/Siz e) lev el.
+Style - only one line will displa y per st yle that will
+represent all the items in that st yle.*
+Style/Color - only one line will displa y per st yle/color
+combination and will represent all items with that
+style/color . *
+UPC (St yle/Color/Siz e) - one line will displa y for each item
+that fits the rest of the input criteria.
+*If run at the St yle or St yle/Color lev el and an y field
+varies from upc to upc it will simply displa y the first
+value it finds. Ex. Within a st yle siz e XL has a retail price
+of $25.00 and siz e XXL has a retail price of $28.00, it
+will only displa y one v alue.
+NOTE: Only fields that were changed will actually book to the database so
+if a description v aries based on siz e or color y ou can still update other11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 4/11
+=== PAGE 5 ===
+Selection Options:
+fields at the st yle lev el without that changing. These v alues will be
+highlighted in R ed.
+Last Modif y Date The last date the item w as modified.
+Once all selections ha ve been made on the Selection Screen, hit the search
+button and the application will search on all selected criteria and will produce
+the data results.
+Activity Screen
+A tab on the upper left of y our item maintenance screen titled ' Activit y'
+allows y ou an additional set of filters to further specific y our search session.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 5/11
+=== PAGE 6 ===
+Selection Options:
+On HandDrop down menu to select ' Any' denoting that the product is in stock to populate on
+the results screen or 'No' which ex cludes product that is on hand in the store or
+warehouse. *Must enable function b y activ ating r adio button to the left of the drop
+down menu.
+On OrderDrop down menu to select ' Any' denoting that the product is on order to populate on
+the results screen or 'No' which ex cludes product that is on order for the store or
+warehouse. *Must enable function b y activ ating r adio button to the left of the drop
+down menu.
+SalesDrop down menu to select ' Any' denoting that the product has had sales within the
+selected date r ange to populate on the results screen or 'No' which ex cludes product
+that has had sales within the selected date r ange for the store. *Must enable
+function b y activ ating r adio button to the left of the drop down menu.
+ReturnsDrop down menu to select ' Any' denoting that the product has had returns within the
+selected date r ange to populate on the results screen or 'No' which ex cludes product
+that has had returns within the selected date r ange for the store. *Must enable
+function b y activ ating r adio button to the left of the drop down menu.
+ReceivingDrop down menu to select ' Any' denoting that the product has been receiv ed within
+the selected date r ange to populate on the results screen or 'No' which ex cludes
+product that has been receiv ed within the selected date r ange for the store or
+warehouse. *Must enable function b y activ ating r adio button to the left of the drop
+down menu.
+TransfersDrop down menu to select ' Any' denoting that the product has been tr ansferred
+within the selected date r ange to populate on the results screen or 'No' which
+excludes product that has been tr ansferred within the selected date r ange for the
+store or w arehouse. *Must enable function b y activ ating r adio button to the left of
+the drop down menu.
+DistributionsDrop down menu to select ' Any' denoting that the product currently has a
+distribution attributed to it within the selected date r ange to populate on the results
+screen or 'No' which ex cludes product that currently has a distribution attributed to it
+within the selected date r ange for the store or w arehouse. *Must enable function b y
+activating r adio button to the left of the drop down menu.
+Once all selections ha ve been made on the Selection Screen, hit the search
+button and the application will search on all selected criteria and will produce
+the data results.
+Result Screen11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 6/11
+=== PAGE 7 ===
+Action Options:
+Book This will load the changes selected into the database.
+Print Exports a printout of the data table.
+Cancel Clears all changes and returns y ou to the search screen.
+Modify Table:
+Check Bo xWhen book ed only the lines that ha ve boxes check ed will be book ed to the database.
+Right clicking on an y checkbo x will giv e you the following options:
+Check All
+Uncheck All
+Check Selected
+Uncheck Selected
+Data Fields Data fields and labels can v ary for each KWI Client. T o add new columns to the
+output from the item master or to change the order of y our columns please contact
+KWI client services. All fields are modifiable ex cept the following:
+UPC
+Markdown / Outlet Markdown
+Markdown Date / Outlet Markdown Date
+Color - If run at the St yle Lev el11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 7/11
+=== PAGE 8 ===
+Modify Table:
+Size - If run at the St yle or color lev el this field will be suppressed
+from output
+Average Cost - If used
+Item PictureIf this field is already populated y ou will be able to roll the mouse o ver to view the
+picture in a pop up window .
+Results can be sorted b y any data column b y clicking on the column header .
+Columns can also be reordered and resiz ed via dr ag and drop .
+Result Outputs:
+UPC  The 10 digit number associated with the item.
+First Digits  The first digits of a 12 digit UPC.
+Vendor  The v endor associated with the item
+Style  The st yle associated with the item.
+MFG#  Client defined. 
+Color Name  The color associated with the item.
+Vendor Color  The v endor color associated with the item.
+Size  The siz e associated with the item.
+Size Code  The siz e code associated with the item.
+Description  The full description associated with the item.
+POS Description The POS description associated with the item. This is a 15 digit char acter field
+description printed on the register receipt.
+Short Description  Client defined.
+Status  An electiv e single char acter field defined b y the client.
+First cost  The total first cost associated with the item.
+Wholesale Cost  The total wholesale cost associated with the item.
+Retail Price  The total retail price associated with the item
+Markdown Price The markdown selling price entered in "Create New Markdown." If this is
+blank or z ero the retail price will be used.      
+Markdown Date  The date of the last markdown for retail stores associated with the item
+Outlet Price  The current selling price in outlet stores associated with the item.
+Outlet Markdown
+Price The markdown selling price in outlet in outlet stores associated with the item.
+If this is z ero or blank then the outlet price will be used.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 8/11
+=== PAGE 9 ===
+Result Outputs:
+Department  The department associated with the item.
+Class  The class associated with the item. 
+Sub-Class  The Sub-class associated with the item.
+Sub Dept  The Sub Dept associated with the item.
+Attribute 1  The fifth lev el of product hier archy associated with the item.
+Attribute 2  The sixth lev el of product hier archy associated with the item.
+Attribute 3  The sev enth lev el of product hier archy associated with the item.
+Season  The season code associated with the item.
+PrePack  The prepack quantit y associated with the item.
+Last Modif y Date The current date for an y modified information to be tr ansmitted to the
+stores. 
+Alt St yle/SKU/UPC  The alternativ e Style/SKU/UPC connected to the item listed in UPC.
+Active Code  The letter "Y" or "N" to show if this SKU is activ e or not.
+Available on W eb  The letter "Y" or "N" to show if this SKU is a vailable on the web or not.
+Stat 3  An electiv e single char acter field as defined b y the client.
+Item Picture Link to attach a picture of the item. Please speak to y our Customer Success
+Manager about this option.
+Item W eight  Client defined.
+Item Length  Client defined.
+Item Width  Client defined.
+Item Height  Client defined.
+Case Length  Client defined.
+Case Width  Client defined. 
+Case Height  Client defined.
+Case W eight  Client defined.
+Case Cube  Client defined.
+Shipping Code  Client defined.
+Taxable Code  Client defined.
+Case Quantit y  Client defined.
+Lead Time  Client defined.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 9/11
+=== PAGE 10 ===
+Result Outputs:
+Duty Code  Client defined. 
+Emplo yee Price  The price the emplo yee pa ys when selecting emplo yee price on the POS .
+Data Modifications
+Modify Options:
+Copy All Copy all v alues in the entire column to paste it into another column.
+Copy SelectedCopy only the v alues in the highlighted rows for the column selected. Y ou must
+select the same number of rows when pasting the v alues.
+Fill AllPrompts y ou for a v alue input and then adds that v alue to the selected column for
+all rows in data set.
+Fill SelectedPrompts y ou for a v alue input and then adds that v alue to the selected column for
+all currently highlighted rows in data set.
+Undo AllClears out an y modified v alues for the entire column and rev erts the cells back to
+the current database v alues.
+Undo SelectedClears out an y modified v alues for the selected rows and rev erts the cells back to
+the current database v alues.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 10/11
+=== PAGE 11 ===
+Modify Options:
+% Off AllApplies to v alue fields only . This will prompt for a percentage and will tak e that
+percentage off the current v alue in the cells for the entire column.
+% Off SelectedApplies to v alue fields only . This will prompt for a percentage and will tak e that
+percentage off the current v alue in the cells for the highlighted rows.
+% Incr . AllApplies to v alue fields only . This will prompt for a percentage and will increment
+the values in the cells for the entire column b y that percentage.
+% Incr . Sel.Applies to v alue fields only . This will prompt for a percentage and will increment
+the values in the cells for the highlighted rows b y that percentage.
+Once the session is sa ved the user will need to Book the session in order to
+record the changes to the system. Once the session is book ed the following
+screen will appear so the user can v erify the changes that were made.
+Book Screen
+When booking is complete, y ou will get a message showing the resulting
+number of records changed.
+Program Flags
+The following progr am flag can be enabled upon request:
+Option to add A vailable on W eb and F abric code (fabr1) to the
+results table.
+Option to add St yle Group as a selection.11/5/25, 10:11 PM Help Window - Item Maintenance
+https://deappre01.kligerweiss.net/staticcontent/generic_help/ItemMaintenance/ItemMaintenance.htm 11/11

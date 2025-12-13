@@ -40,72 +40,99 @@ interface ResultsGridProps {
   vendorMode?: 'primary' | 'secondary';
   onUpdate?: (articleId: string, field: string, value: any) => void;
   onBulkUpdate?: (updates: Array<{ articleId: string; field: string; value: any }>) => void;
+  onPendingChangesChange?: (hasChanges: boolean) => void; // Callback to notify parent about pending changes
 }
 
+// Column configuration version - increment this to force reset of saved column configs
+const COLUMN_CONFIG_VERSION = '2.0';
+
 const defaultColumns: ColumnConfig[] = [
+  // Table 1 columns (from first image - exact order and labels)
   { id: 'upc', label: 'UPC', visible: true, order: 0 },
-  { id: 'first_digits', label: 'First Digits', visible: false, order: 1 },
+  { id: 'first_digits', label: 'First Digits', visible: true, order: 1 },
   { id: 'vendor', label: 'Vendor', visible: true, order: 2 },
   { id: 'style', label: 'Style', visible: true, order: 3 },
-  { id: 'mfg_number', label: 'MFG#', visible: false, order: 4 },
-  { id: 'color_name', label: 'Color Name', visible: true, order: 5 },
-  { id: 'vendor_color', label: 'Vendor Color', visible: true, order: 6 },
-  { id: 'size', label: 'Size', visible: true, order: 7 },
-  { id: 'size_code', label: 'Size Code', visible: false, order: 8 },
-  { id: 'description', label: 'Description', visible: true, order: 9 },
-  { id: 'pos_description', label: 'POS Description', visible: true, order: 10 },
-  { id: 'short_description', label: 'Short Description', visible: false, order: 11 },
-  { id: 'status', label: 'Status', visible: true, order: 12 },
-  { id: 'first_cost', label: 'First Cost', visible: true, order: 13 },
-  { id: 'wholesale_price', label: 'Wholesale Cost', visible: true, order: 14 },
-  { id: 'retail_price', label: 'Retail Price', visible: true, order: 15 },
-  { id: 'markdown_price', label: 'Markdown Price', visible: false, order: 16 },
-  { id: 'markdown_date', label: 'Markdown Date', visible: false, order: 17 },
-  { id: 'outlet_price', label: 'Outlet Price', visible: false, order: 18 },
-  { id: 'outlet_markdown_price', label: 'Outlet Markdown Price', visible: false, order: 19 },
-  { id: 'department', label: 'Department', visible: true, order: 20 },
-  { id: 'class', label: 'Class', visible: true, order: 21 },
-  { id: 'subclass', label: 'Sub-Class', visible: true, order: 22 },
-  { id: 'sub_dept', label: 'Sub Dept', visible: false, order: 23 },
-  { id: 'attribute1', label: 'Attribute 1', visible: false, order: 24 },
-  { id: 'attribute2', label: 'Attribute 2', visible: false, order: 25 },
-  { id: 'attribute3', label: 'Attribute 3', visible: false, order: 26 },
-  { id: 'season', label: 'Season', visible: true, order: 27 },
-  { id: 'prepack', label: 'PrePack', visible: false, order: 28 },
-  { id: 'last_modified_date', label: 'Last Modify Date', visible: true, order: 29 },
-  { id: 'alt_style_sku_upc', label: 'Alt Style/SKU/UPC', visible: false, order: 30 },
-  { id: 'active_code', label: 'Active Code', visible: true, order: 31 },
-  { id: 'available_on_web', label: 'Available on Web', visible: false, order: 32 },
-  { id: 'stat3', label: 'Stat 3', visible: true, order: 33 },
-  { id: 'item_picture', label: 'Item Picture', visible: false, order: 34 },
-  { id: 'item_weight', label: 'Item Weight', visible: false, order: 35 },
-  { id: 'item_length', label: 'Item Length', visible: false, order: 36 },
-  { id: 'item_width', label: 'Item Width', visible: false, order: 37 },
-  { id: 'item_height', label: 'Item Height', visible: false, order: 38 },
-  { id: 'case_length', label: 'Case Length', visible: false, order: 39 },
-  { id: 'case_width', label: 'Case Width', visible: false, order: 40 },
-  { id: 'case_height', label: 'Case Height', visible: false, order: 41 },
-  { id: 'case_weight', label: 'Case Weight', visible: false, order: 42 },
-  { id: 'case_cube', label: 'Case Cube', visible: false, order: 43 },
-  { id: 'shipping_code', label: 'Shipping Code', visible: false, order: 44 },
-  { id: 'taxable_code', label: 'Taxable Code', visible: false, order: 45 },
-  { id: 'case_quantity', label: 'Case Quantity', visible: false, order: 46 },
-  { id: 'lead_time', label: 'Lead Time', visible: false, order: 47 },
-  { id: 'duty_code', label: 'Duty Code', visible: false, order: 48 },
-  { id: 'employee_price', label: 'Employee Price', visible: false, order: 49 },
+  { id: 'color_name', label: 'Color Name', visible: true, order: 4 },
+  { id: 'vendor_color', label: 'Vendor Color', visible: true, order: 5 },
+  { id: 'size', label: 'Size', visible: true, order: 6 },
+  { id: 'description', label: 'Description', visible: true, order: 7 },
+  { id: 'pos_description', label: 'POS Description', visible: true, order: 8 },
+  { id: 'first_cost', label: 'First Cost', visible: true, order: 9 },
+  { id: 'wholesale_price', label: 'Wholesale Cost', visible: true, order: 10 },
+  // Table 2 columns (from second image - exact order and labels)
+  { id: 'retail_price', label: 'Retail Price', visible: true, order: 11 },
+  { id: 'markdown_price', label: 'Markdown Price', visible: true, order: 12 },
+  { id: 'markdown_date', label: 'Markdown Date', visible: true, order: 13 },
+  { id: 'outlet_price', label: 'Outlet Price', visible: true, order: 14 },
+  { id: 'outlet_markdown_price', label: 'Outlet Markdown', visible: true, order: 15 },
+  { id: 'outlet_markdown_date', label: 'Outlet Markdown Date', visible: true, order: 16 },
+  { id: 'department', label: 'Department', visible: true, order: 17 },
+  { id: 'class', label: 'Class', visible: true, order: 18 },
+  { id: 'subclass', label: 'Sub-Class', visible: true, order: 19 },
+  { id: 'sub_dept', label: 'Sub Dept', visible: true, order: 20 },
+  { id: 'attribute1', label: 'Attribute 1', visible: true, order: 21 },
+  { id: 'attribute2', label: 'Attribute 2', visible: true, order: 22 },
+  // Table 3 columns (from third image - exact order and labels)
+  { id: 'attribute3', label: 'Attribute 3', visible: true, order: 23 },
+  { id: 'season', label: 'Season', visible: true, order: 24 },
+  { id: 'prepack', label: 'Prepack', visible: true, order: 25 },
+  { id: 'last_modified_date', label: 'Last Modified', visible: true, order: 26 },
+  { id: 'alt_style_sku_upc', label: 'Alt Style/SKU', visible: true, order: 27 },
+  { id: 'active_code', label: 'Active Code', visible: true, order: 28 },
+  { id: 'status', label: 'Status', visible: true, order: 29 },
+  { id: 'available_on_web', label: 'Available On Web', visible: true, order: 30 },
+  { id: 'stat3', label: 'Stat 3', visible: true, order: 31 },
+  { id: 'item_picture', label: 'Item Picture', visible: true, order: 32 },
+  { id: 'employee_price', label: 'Employee Price', visible: true, order: 33 },
+  { id: 'web_back_order_eligible', label: 'Web Back Order Eligible', visible: true, order: 34 },
 ];
 
-export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpdate, onBulkUpdate, vendorMode = 'primary' }: ResultsGridProps) {
+export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpdate, onBulkUpdate, vendorMode = 'primary', onPendingChangesChange }: ResultsGridProps) {
   // Add error boundary state
   const [error, setError] = useState<Error | null>(null);
   
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [columns, setColumns] = useState<ColumnConfig[]>(() => {
     try {
+      // Check version first - if version changed, reset to defaults
+      const savedVersion = localStorage.getItem('columnConfigVersion');
+      if (savedVersion !== COLUMN_CONFIG_VERSION) {
+        console.log('Column config version changed, resetting to defaults');
+        localStorage.removeItem('columnConfig');
+        localStorage.setItem('columnConfigVersion', COLUMN_CONFIG_VERSION);
+        return defaultColumns;
+      }
+      
       const saved = localStorage.getItem('columnConfig');
-      return saved ? JSON.parse(saved) : defaultColumns;
+      const savedConfig = saved ? JSON.parse(saved) : null;
+      
+      // Check if saved config matches the new default structure
+      // If the number of columns changed or structure is different, reset to defaults
+      if (savedConfig && Array.isArray(savedConfig)) {
+        // Check if saved config has all the new columns
+        const savedIds = new Set(savedConfig.map((c: ColumnConfig) => c.id));
+        const defaultIds = new Set(defaultColumns.map(c => c.id));
+        
+        // If columns don't match, reset to defaults
+        if (savedIds.size !== defaultIds.size || 
+            !Array.from(defaultIds).every(id => savedIds.has(id))) {
+          console.log('Column structure changed, resetting to defaults');
+          localStorage.removeItem('columnConfig');
+          localStorage.setItem('columnConfigVersion', COLUMN_CONFIG_VERSION);
+          return defaultColumns;
+        }
+        
+        // For now, always use the default order to ensure correct display
+        // User can reorder columns if needed, but we start with the correct order from images
+        return defaultColumns;
+      }
+      
+      // No saved config, use defaults
+      localStorage.setItem('columnConfigVersion', COLUMN_CONFIG_VERSION);
+      return defaultColumns;
     } catch (e) {
       console.error('Error loading column config:', e);
+      localStorage.setItem('columnConfigVersion', COLUMN_CONFIG_VERSION);
       return defaultColumns;
     }
   });
@@ -113,13 +140,15 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
   const [dragOverColumnIndex, setDragOverColumnIndex] = useState<number | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [bulkEditField, setBulkEditField] = useState<string>('');
-  const [bulkEditValue, setBulkEditValue] = useState<string>('');
   
   // Modify options state
   const [copiedValues, setCopiedValues] = useState<{ columnId: string; values: any[] } | null>(null);
   const [originalValues, setOriginalValues] = useState<Map<string, Map<string, any>>>(new Map()); // articleId -> field -> original value
   const [modifiedValues, setModifiedValues] = useState<Map<string, Map<string, any>>>(new Map()); // articleId -> field -> modified value
+  
+  // Pending changes state - tracks changes that haven't been confirmed yet
+  const [pendingChanges, setPendingChanges] = useState<Map<string, Map<string, any>>>(new Map()); // articleId -> field -> new value
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
   // ALL REFS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const prevResultsIdsRef = React.useRef<string>('');
@@ -136,16 +165,28 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
     const safeResults = Array.isArray(results) ? results : [];
     const currentIds = safeResults.map(r => r.article_id).join(',');
     if (prevResultsIdsRef.current && prevResultsIdsRef.current !== currentIds) {
-      // Results actually changed, clear selection
+      // Results actually changed, clear selection and pending changes
       setSelectedRows(new Set());
-      setBulkEditField('');
-      setBulkEditValue('');
-      // Clear copied values and modified values
+      // Clear copied values, modified values, and pending changes
       setCopiedValues(null);
       setModifiedValues(new Map());
+      setPendingChanges(new Map());
+      setHasPendingChanges(false);
+      if (onPendingChangesChange) {
+        onPendingChangesChange(false);
+      }
     }
     prevResultsIdsRef.current = currentIds;
-  }, [results]);
+  }, [results, onPendingChangesChange]);
+  
+  // Update hasPendingChanges whenever pendingChanges changes
+  useEffect(() => {
+    const hasChanges = pendingChanges.size > 0;
+    setHasPendingChanges(hasChanges);
+    if (onPendingChangesChange) {
+      onPendingChangesChange(hasChanges);
+    }
+  }, [pendingChanges, onPendingChangesChange]);
 
   // Initialize original values when results change
   // This must be after getCellValue is defined, so we'll move it later
@@ -295,13 +336,141 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
     return `$${price.toFixed(2)}`;
   };
 
-  const handleCellUpdate = (articleId: string, field: string, value: any) => {
-    if (onUpdate) {
-      onUpdate(articleId, field, value);
+  // Get article field name for updates (must be defined before handleConfirmChanges)
+  const getArticleFieldNameForUpdate = (columnId: string): string => {
+    if (vendorMode === 'secondary') {
+      switch (columnId) {
+        case 'status':
+        case 'active_code': return 'secondary_active_code';
+        case 'vendor': return 'secondary_vendor';
+        case 'retail_price': return 'secondary_retail_price';
+        case 'wholesale_price': return 'secondary_wholesale_price';
+        case 'first_cost': return 'secondary_first_cost';
+        case 'markdown_price': return 'secondary_retail_markdown_price';
+        case 'outlet_price': return 'secondary_outlet_price';
+        case 'outlet_markdown_price': return 'secondary_outlet_markdown_price';
+        case 'prepack': return 'secondary_prepack';
+        default: return columnId;
+      }
     } else {
-      // Default: just log for now
-      console.log('Update:', articleId, field, value);
+      switch (columnId) {
+        case 'status':
+        case 'active_code': return 'primary_active_code';
+        case 'vendor': return 'primary_vendor';
+        case 'retail_price': return 'primary_retail_price';
+        case 'wholesale_price': return 'primary_wholesale_price';
+        case 'first_cost': return 'primary_first_cost';
+        case 'markdown_price': return 'primary_retail_markdown_price';
+        case 'outlet_price': return 'primary_outlet_price';
+        case 'outlet_markdown_price': return 'primary_outlet_markdown_price';
+        case 'prepack': return 'primary_prepack';
+        default: return columnId;
+      }
     }
+  };
+
+  // Track pending change instead of immediately committing
+  const handleCellUpdate = (articleId: string, field: string, value: any, columnId: string) => {
+    // Get the original value for this field
+    const originalValue = originalValues.get(articleId)?.get(columnId);
+    
+    // Check if the value actually changed
+    const hasChanged = originalValue !== value && 
+      JSON.stringify(originalValue) !== JSON.stringify(value);
+    
+    if (hasChanged) {
+      // Store as pending change
+      setPendingChanges(prev => {
+        const newMap = new Map(prev);
+        if (!newMap.has(articleId)) {
+          newMap.set(articleId, new Map());
+        }
+        newMap.get(articleId)!.set(columnId, value);
+        return newMap;
+      });
+    } else {
+      // Value reverted to original, remove from pending changes
+      setPendingChanges(prev => {
+        const newMap = new Map(prev);
+        const articleChanges = newMap.get(articleId);
+        if (articleChanges) {
+          articleChanges.delete(columnId);
+          if (articleChanges.size === 0) {
+            newMap.delete(articleId);
+          }
+        }
+        return newMap;
+      });
+    }
+  };
+  
+  // Confirm and commit all pending changes
+  const handleConfirmChanges = () => {
+    if (!onUpdate && !onBulkUpdate) return;
+    
+    const updates: Array<{ articleId: string; field: string; value: any }> = [];
+    
+    pendingChanges.forEach((articleChanges, articleId) => {
+      articleChanges.forEach((value, columnId) => {
+        const fieldName = getArticleFieldNameForUpdate(columnId);
+        updates.push({ articleId, field: fieldName, value });
+      });
+    });
+    
+    if (updates.length > 0) {
+      if (onBulkUpdate) {
+        onBulkUpdate(updates);
+      } else if (onUpdate) {
+        updates.forEach(update => {
+          onUpdate(update.articleId, update.field, update.value);
+        });
+      }
+      
+      // Update original values to reflect confirmed changes
+      setOriginalValues(prev => {
+        const newMap = new Map(prev);
+        pendingChanges.forEach((articleChanges, articleId) => {
+          if (!newMap.has(articleId)) {
+            newMap.set(articleId, new Map());
+          }
+          articleChanges.forEach((value, columnId) => {
+            newMap.get(articleId)!.set(columnId, value);
+          });
+        });
+        return newMap;
+      });
+      
+      // Clear pending changes
+      setPendingChanges(new Map());
+      setHasPendingChanges(false);
+      if (onPendingChangesChange) {
+        onPendingChangesChange(false);
+      }
+    }
+  };
+  
+  // Discard all pending changes
+  const handleDiscardChanges = () => {
+    setPendingChanges(new Map());
+    setHasPendingChanges(false);
+    if (onPendingChangesChange) {
+      onPendingChangesChange(false);
+    }
+  };
+  
+  // Check if a cell has pending changes
+  const hasPendingChange = (articleId: string, columnId: string): boolean => {
+    return pendingChanges.get(articleId)?.has(columnId) || false;
+  };
+  
+  // Get the display value for a cell (pending change or current value)
+  const getDisplayValue = (article: Article, columnId: string): any => {
+    const articleId = article.article_id;
+    const pendingValue = pendingChanges.get(articleId)?.get(columnId);
+    if (pendingValue !== undefined) {
+      return pendingValue;
+    }
+    return getCellValue(article, columnId);
   };
 
   const getCellValue = (article: Article, columnId: string): string | number => {
@@ -401,6 +570,8 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
       
       // Physical attributes
       case 'item_picture': return item.item_picture || item.itemPicture || '-';
+      case 'web_back_order_eligible': return item.web_back_order_eligible || item.webBackOrderEligible || '-';
+      case 'outlet_markdown_date': return item.outlet_markdown_date ? formatDate(item.outlet_markdown_date) : '-';
       case 'item_weight': return item.item_weight || item.itemWeight || 0;
       case 'item_length': return item.item_length || item.itemLength || 0;
       case 'item_width': return item.item_width || item.itemWidth || 0;
@@ -512,79 +683,6 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
     }
   };
 
-  // Bulk edit handlers
-  const handleBulkEdit = () => {
-    if (!bulkEditField || !onUpdate || !bulkEditValue) return;
-
-    // Get field config to determine how to process the value
-    const fieldConfig = getFieldConfig(bulkEditField);
-    if (!fieldConfig) return;
-
-    const getArticleFieldName = (colId: string): string => {
-      if (vendorMode === 'secondary') {
-        switch (colId) {
-          case 'status': return 'secondary_active_code';
-          case 'vendor': return 'secondary_vendor';
-          case 'retail_price': return 'secondary_retail_price';
-          case 'wholesale_price': return 'secondary_wholesale_price';
-          default: return colId;
-        }
-      } else {
-        switch (colId) {
-          case 'status': return 'primary_active_code';
-          case 'vendor': return 'primary_vendor';
-          case 'retail_price': return 'primary_retail_price';
-          case 'wholesale_price': return 'primary_wholesale_price';
-          default: return colId;
-        }
-      }
-    };
-    const articleFieldName = getArticleFieldName(bulkEditField);
-
-    // Process the value based on field type
-    let finalValue: any = bulkEditValue;
-    if (fieldConfig.type === 'price') {
-      finalValue = parseFloat(bulkEditValue.replace('$', '')) || 0;
-    } else if (fieldConfig.type === 'number') {
-      finalValue = parseFloat(bulkEditValue) || 0;
-    } else {
-      finalValue = String(bulkEditValue);
-    }
-
-    // Apply to all selected rows - batch all updates together
-    if (onBulkUpdate) {
-      // Use bulk update if available (more efficient)
-      const updates = Array.from(selectedRows).map(articleId => ({
-        articleId,
-        field: articleFieldName,
-        value: finalValue,
-      }));
-      onBulkUpdate(updates);
-    } else if (onUpdate) {
-      // Fallback to individual updates (less efficient but works)
-      // Collect all updates first, then apply them
-      const updates: Array<{ articleId: string; field: string; value: any }> = [];
-      selectedRows.forEach(articleId => {
-        updates.push({ articleId, field: articleFieldName, value: finalValue });
-      });
-      
-      // Apply all updates in a single batch by updating state once
-      // Since we can't batch Redux dispatches easily, we'll use a workaround:
-      // Update the results array directly and dispatch once
-      if (updates.length > 0) {
-        // For now, call onUpdate for each, but the parent should batch them
-        // TODO: Implement proper batching in parent component
-        updates.forEach(update => {
-          handleCellUpdate(update.articleId, update.field, update.value);
-        });
-      }
-    }
-
-    // Clear bulk edit state
-    setBulkEditField('');
-    setBulkEditValue('');
-    setSelectedRows(new Set());
-  };
 
   // Get field type and options for SmartEditableCell
   const getFieldConfig = (columnId: string) => {
@@ -600,20 +698,6 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
             { value: 'XL', label: 'XL' },
             { value: 'XXL', label: 'XXL' },
             { value: 'One Size', label: 'One Size' },
-          ],
-        };
-      case 'color':
-        return {
-          type: 'select',
-          options: [
-            { value: 'Black', label: 'Black' },
-            { value: 'White', label: 'White' },
-            { value: 'Blue', label: 'Blue' },
-            { value: 'Red', label: 'Red' },
-            { value: 'Gray', label: 'Gray' },
-            { value: 'Navy', label: 'Navy' },
-            { value: 'Khaki', label: 'Khaki' },
-            { value: 'Beige', label: 'Beige' },
           ],
         };
       case 'status':
@@ -640,35 +724,50 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
         return {
           type: 'select',
           options: [
-            { value: '01', label: 'Department 01' },
-            { value: '02', label: 'Department 02' },
-            { value: '03', label: 'Department 03' },
-            { value: '04', label: 'Department 04' },
-            { value: '05', label: 'Department 05' },
-            // TODO: Populate from coll reference table
+            { value: 'Accessories-02', label: 'Accessories-02' },
+            { value: 'Apparel-01', label: 'Apparel-01' },
+            { value: 'Beauty & Cosmetics-07', label: 'Beauty & Cosmetics-07' },
+            { value: 'Footwear-03', label: 'Footwear-03' },
+            { value: 'Home & Living-04', label: 'Home & Living-04' },
+            { value: 'Jewelry-05', label: 'Jewelry-05' },
+            { value: 'Luggage-06', label: 'Luggage-06' },
           ],
         };
       case 'class':
         return {
           type: 'select',
           options: [
-            { value: '01', label: 'Class 01' },
-            { value: '02', label: 'Class 02' },
-            { value: '03', label: 'Class 03' },
-            { value: '04', label: 'Class 04' },
-            { value: '05', label: 'Class 05' },
-            // TODO: Populate from types reference table
+            { value: 'Earrings-400', label: 'Earrings-400' },
+            { value: 'Belts-107', label: 'Belts-107' },
+            { value: 'Bracelets-109', label: 'Bracelets-109' },
+            { value: 'Charms-165', label: 'Charms-165' },
+            { value: 'Earrings-110', label: 'Earrings-110' },
+            { value: 'Necklaces-111', label: 'Necklaces-111' },
+            { value: 'Rings-112', label: 'Rings-112' },
+            { value: 'Watches-113', label: 'Watches-113' },
+            { value: 'Tops-201', label: 'Tops-201' },
+            { value: 'Bottoms-202', label: 'Bottoms-202' },
+            { value: 'Outerwear-203', label: 'Outerwear-203' },
           ],
         };
       case 'subclass':
         return {
           type: 'select',
           options: [
-            { value: 'Subclass 01', label: 'Subclass 01' },
-            { value: 'Subclass 02', label: 'Subclass 02' },
-            { value: 'Subclass 03', label: 'Subclass 03' },
-            { value: 'Subclass 04', label: 'Subclass 04' },
-            { value: 'Subclass 05', label: 'Subclass 05' },
+            { value: 'General-000', label: 'General-000' },
+            { value: 'Adjustable Bracelets-914', label: 'Adjustable Bracelets-914' },
+            { value: 'Athletic Wear-019', label: 'Athletic Wear-019' },
+            { value: 'Bangles-910', label: 'Bangles-910' },
+            { value: 'Bangles-909', label: 'Bangles-909' },
+            { value: 'Best Seller-202', label: 'Best Seller-202' },
+            { value: 'Chain Bracelets-911', label: 'Chain Bracelets-911' },
+            { value: 'Cuff Bracelets-912', label: 'Cuff Bracelets-912' },
+            { value: 'T-Shirts-301', label: 'T-Shirts-301' },
+            { value: 'Jeans-302', label: 'Jeans-302' },
+            { value: 'Sweaters-303', label: 'Sweaters-303' },
+            { value: 'Blouses-304', label: 'Blouses-304' },
+            { value: 'Jackets-305', label: 'Jackets-305' },
+            { value: 'Shorts-306', label: 'Shorts-306' },
           ],
         };
       case 'color_name':
@@ -693,6 +792,7 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
         return {
           type: 'select',
           options: [
+            { value: 'Oscar de la Renta', label: 'Oscar de la Renta' },
             { value: 'Vendor A', label: 'Vendor A' },
             { value: 'Vendor B', label: 'Vendor B' },
             { value: 'Vendor C', label: 'Vendor C' },
@@ -735,6 +835,14 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
             { value: 'N', label: 'N' },
           ],
         };
+      case 'web_back_order_eligible':
+        return {
+          type: 'select',
+          options: [
+            { value: 'Y', label: 'Y' },
+            { value: 'N', label: 'N' },
+          ],
+        };
       // Price fields
       case 'first_cost':
       case 'wholesale_price':
@@ -759,6 +867,7 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
         return { type: 'number' };
       // Date fields
       case 'markdown_date':
+      case 'outlet_markdown_date':
       case 'last_modified_date':
       case 'creation_date':
       case 'last_modified':
@@ -768,47 +877,12 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
     }
   };
 
-  // Get editable columns for bulk edit dropdown (must be after getFieldConfig and sortedColumns)
-  const editableColumns = sortedColumns.filter(col => isEditable(col.id));
-
   // Check if a field is a value field (price or number)
   const isValueField = (columnId: string): boolean => {
     const fieldConfig = getFieldConfig(columnId);
     return fieldConfig.type === 'price' || fieldConfig.type === 'number';
   };
 
-  // Get article field name for updates
-  const getArticleFieldNameForUpdate = (columnId: string): string => {
-    if (vendorMode === 'secondary') {
-      switch (columnId) {
-        case 'status':
-        case 'active_code': return 'secondary_active_code';
-        case 'vendor': return 'secondary_vendor';
-        case 'retail_price': return 'secondary_retail_price';
-        case 'wholesale_price': return 'secondary_wholesale_price';
-        case 'first_cost': return 'secondary_first_cost';
-        case 'markdown_price': return 'secondary_retail_markdown_price';
-        case 'outlet_price': return 'secondary_outlet_price';
-        case 'outlet_markdown_price': return 'secondary_outlet_markdown_price';
-        case 'prepack': return 'secondary_prepack';
-        default: return columnId;
-      }
-    } else {
-      switch (columnId) {
-        case 'status':
-        case 'active_code': return 'primary_active_code';
-        case 'vendor': return 'primary_vendor';
-        case 'retail_price': return 'primary_retail_price';
-        case 'wholesale_price': return 'primary_wholesale_price';
-        case 'first_cost': return 'primary_first_cost';
-        case 'markdown_price': return 'primary_retail_markdown_price';
-        case 'outlet_price': return 'primary_outlet_price';
-        case 'outlet_markdown_price': return 'primary_outlet_markdown_price';
-        case 'prepack': return 'primary_prepack';
-        default: return columnId;
-      }
-    }
-  };
 
   // Modify option handlers
   const handleCopyAll = (columnId: string) => {
@@ -827,14 +901,11 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
   const handlePaste = (targetColumnId: string) => {
     if (!copiedValues || copiedValues.values.length === 0) return;
     
-    const fieldName = getArticleFieldNameForUpdate(targetColumnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
-    
     // If we have selected rows, paste to selected rows only
     // Otherwise, paste to all rows (matching the number of copied values)
     const targetRows = selectedRows.size > 0 
       ? Array.from(selectedRows)
-      : results.slice(0, copiedValues.values.length).map(r => r.article_id);
+      : safeResults.slice(0, copiedValues.values.length).map(r => r.article_id);
     
     if (targetRows.length !== copiedValues.values.length) {
       alert(`Cannot paste: Number of selected rows (${targetRows.length}) must match number of copied values (${copiedValues.values.length})`);
@@ -849,57 +920,26 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
         if (fieldConfig.type === 'price' || fieldConfig.type === 'number') {
           finalValue = typeof copiedValue === 'number' ? copiedValue : parseFloat(String(copiedValue)) || 0;
         }
-        updates.push({ articleId, field: fieldName, value: finalValue });
         
-        // Track modification
-        setModifiedValues(prev => {
-          const newMap = new Map(prev);
-          if (!newMap.has(articleId)) {
-            newMap.set(articleId, new Map());
-          }
-          newMap.get(articleId)!.set(targetColumnId, finalValue);
-          return newMap;
-        });
+        // Store as pending change
+        handleCellUpdate(articleId, '', finalValue, targetColumnId);
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handleFillAll = (columnId: string, value: any) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
+    let finalValue: any = value;
+    const fieldConfig = getFieldConfig(columnId);
+    if (fieldConfig.type === 'price' || fieldConfig.type === 'number') {
+      finalValue = parseFloat(value) || 0;
+    }
     
     safeResults.forEach(article => {
-      let finalValue: any = value;
-      const fieldConfig = getFieldConfig(columnId);
-      if (fieldConfig.type === 'price' || fieldConfig.type === 'number') {
-        finalValue = parseFloat(value) || 0;
-      }
-      updates.push({ articleId: article.article_id, field: fieldName, value: finalValue });
-      
-      // Track modification
-      setModifiedValues(prev => {
-        const newMap = new Map(prev);
-        if (!newMap.has(article.article_id)) {
-          newMap.set(article.article_id, new Map());
-        }
-        newMap.get(article.article_id)!.set(columnId, finalValue);
-        return newMap;
-      });
+      handleCellUpdate(article.article_id, '', finalValue, columnId);
     });
-
-    if (onBulkUpdate) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handleFillSelected = (columnId: string, value: any) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
-    
     let finalValue: any = value;
     const fieldConfig = getFieldConfig(columnId);
     if (fieldConfig.type === 'price' || fieldConfig.type === 'number') {
@@ -907,260 +947,88 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
     }
 
     Array.from(selectedRows).forEach(articleId => {
-      updates.push({ articleId, field: fieldName, value: finalValue });
-      
-      // Track modification
-      setModifiedValues(prev => {
-        const newMap = new Map(prev);
-        if (!newMap.has(articleId)) {
-          newMap.set(articleId, new Map());
-        }
-        newMap.get(articleId)!.set(columnId, finalValue);
-        return newMap;
-      });
+      handleCellUpdate(articleId, '', finalValue, columnId);
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handleUndoAll = (columnId: string) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
-    
     safeResults.forEach(article => {
       const originalValue = originalValues.get(article.article_id)?.get(columnId);
       if (originalValue !== undefined) {
-        updates.push({ articleId: article.article_id, field: fieldName, value: originalValue });
-        
-        // Remove from modified values
-        setModifiedValues(prev => {
-          const newMap = new Map(prev);
-          const articleMods = newMap.get(article.article_id);
-          if (articleMods) {
-            articleMods.delete(columnId);
-            if (articleMods.size === 0) {
-              newMap.delete(article.article_id);
-            }
-          }
-          return newMap;
-        });
+        // Revert to original value (this will remove from pending changes if it matches)
+        handleCellUpdate(article.article_id, '', originalValue, columnId);
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handleUndoSelected = (columnId: string) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
-    
     Array.from(selectedRows).forEach(articleId => {
       const originalValue = originalValues.get(articleId)?.get(columnId);
       if (originalValue !== undefined) {
-        updates.push({ articleId, field: fieldName, value: originalValue });
-        
-        // Remove from modified values
-        setModifiedValues(prev => {
-          const newMap = new Map(prev);
-          const articleMods = newMap.get(articleId);
-          if (articleMods) {
-            articleMods.delete(columnId);
-            if (articleMods.size === 0) {
-              newMap.delete(articleId);
-            }
-          }
-          return newMap;
-        });
+        // Revert to original value (this will remove from pending changes if it matches)
+        handleCellUpdate(articleId, '', originalValue, columnId);
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handlePercentOffAll = (columnId: string, percent: number) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
     const multiplier = 1 - (percent / 100);
     
     safeResults.forEach(article => {
-      const currentValue = getCellValue(article, columnId);
+      // Use display value (which includes pending changes)
+      const currentValue = getDisplayValue(article, columnId);
       if (typeof currentValue === 'number' && currentValue > 0) {
         const newValue = currentValue * multiplier;
-        updates.push({ articleId: article.article_id, field: fieldName, value: newValue });
-        
-        // Track modification
-        setModifiedValues(prev => {
-          const newMap = new Map(prev);
-          if (!newMap.has(article.article_id)) {
-            newMap.set(article.article_id, new Map());
-          }
-          newMap.get(article.article_id)!.set(columnId, newValue);
-          return newMap;
-        });
+        handleCellUpdate(article.article_id, '', newValue, columnId);
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handlePercentOffSelected = (columnId: string, percent: number) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
     const multiplier = 1 - (percent / 100);
     
     Array.from(selectedRows).forEach(articleId => {
       const article = safeResults.find(r => r.article_id === articleId);
       if (article) {
-        const currentValue = getCellValue(article, columnId);
+        // Use display value (which includes pending changes)
+        const currentValue = getDisplayValue(article, columnId);
         if (typeof currentValue === 'number' && currentValue > 0) {
           const newValue = currentValue * multiplier;
-          updates.push({ articleId, field: fieldName, value: newValue });
-          
-          // Track modification
-          setModifiedValues(prev => {
-            const newMap = new Map(prev);
-            if (!newMap.has(articleId)) {
-              newMap.set(articleId, new Map());
-            }
-            newMap.get(articleId)!.set(columnId, newValue);
-            return newMap;
-          });
+          handleCellUpdate(articleId, '', newValue, columnId);
         }
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handlePercentIncrAll = (columnId: string, percent: number) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
     const multiplier = 1 + (percent / 100);
     
     safeResults.forEach(article => {
-      const currentValue = getCellValue(article, columnId);
+      // Use display value (which includes pending changes)
+      const currentValue = getDisplayValue(article, columnId);
       if (typeof currentValue === 'number' && currentValue > 0) {
         const newValue = currentValue * multiplier;
-        updates.push({ articleId: article.article_id, field: fieldName, value: newValue });
-        
-        // Track modification
-        setModifiedValues(prev => {
-          const newMap = new Map(prev);
-          if (!newMap.has(article.article_id)) {
-            newMap.set(article.article_id, new Map());
-          }
-          newMap.get(article.article_id)!.set(columnId, newValue);
-          return newMap;
-        });
+        handleCellUpdate(article.article_id, '', newValue, columnId);
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
   const handlePercentIncrSelected = (columnId: string, percent: number) => {
-    const fieldName = getArticleFieldNameForUpdate(columnId);
-    const updates: Array<{ articleId: string; field: string; value: any }> = [];
     const multiplier = 1 + (percent / 100);
     
     Array.from(selectedRows).forEach(articleId => {
       const article = safeResults.find(r => r.article_id === articleId);
       if (article) {
-        const currentValue = getCellValue(article, columnId);
+        // Use display value (which includes pending changes)
+        const currentValue = getDisplayValue(article, columnId);
         if (typeof currentValue === 'number' && currentValue > 0) {
           const newValue = currentValue * multiplier;
-          updates.push({ articleId, field: fieldName, value: newValue });
-          
-          // Track modification
-          setModifiedValues(prev => {
-            const newMap = new Map(prev);
-            if (!newMap.has(articleId)) {
-              newMap.set(articleId, new Map());
-            }
-            newMap.get(articleId)!.set(columnId, newValue);
-            return newMap;
-          });
+          handleCellUpdate(articleId, '', newValue, columnId);
         }
       }
     });
-
-    if (onBulkUpdate && updates.length > 0) {
-      onBulkUpdate(updates);
-    }
   };
 
-  // Render bulk edit value input
-  const renderBulkEditValue = () => {
-    if (!bulkEditField) return null;
-    
-    try {
-      const fieldConfig = getFieldConfig(bulkEditField);
-      if (!fieldConfig) return null;
-      
-      return (
-        <>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="bulk-value" className="text-sm text-gray-700">Value:</Label>
-            {fieldConfig.type === 'select' ? (
-              <Select value={bulkEditValue} onValueChange={setBulkEditValue}>
-                <SelectTrigger id="bulk-value" className="w-[180px]">
-                  <SelectValue placeholder="Select value" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fieldConfig.options?.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                id="bulk-value"
-                type={fieldConfig.type === 'price' || fieldConfig.type === 'number' ? 'number' : 'text'}
-                value={bulkEditValue}
-                onChange={(e) => setBulkEditValue(e.target.value)}
-                placeholder="Enter value"
-                className="w-[180px]"
-              />
-            )}
-          </div>
-          <Button
-            onClick={handleBulkEdit}
-            className="bg-[#1976D2] hover:bg-[#1565C0] text-white"
-            disabled={!bulkEditValue}
-          >
-            Apply to {selectedRows.size} row{selectedRows.size !== 1 ? 's' : ''}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSelectedRows(new Set());
-              setBulkEditField('');
-              setBulkEditValue('');
-            }}
-          >
-            Cancel
-          </Button>
-        </>
-      );
-    } catch (error) {
-      console.error('Error rendering bulk edit value input:', error);
-      return null;
-    }
-  };
 
   // Always render something if we have search criteria or results
   console.log('ResultsGrid rendering:', { 
@@ -1170,36 +1038,70 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
     shouldRender: hasSearchCriteria || loading || safeResults.length > 0
   });
 
+  // Count total pending changes
+  const pendingChangesCount = Array.from(pendingChanges.values()).reduce(
+    (sum, articleChanges) => sum + articleChanges.size,
+    0
+  );
+
   return (
     <div className="mt-4 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Results</h3>
-        <ColumnCustomizer columns={columns} onColumnsChange={setColumns} />
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-900">Results</h3>
+          <div className="flex items-center gap-4">
+            {hasPendingChanges && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-md">
+                <span className="text-sm font-medium text-yellow-800">
+                  {pendingChangesCount} pending change{pendingChangesCount !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+            <ColumnCustomizer columns={columns} onColumnsChange={setColumns} />
+          </div>
+        </div>
+        {/* Secondary Vendor Mode Banner - Inline with Results */}
+        {vendorMode === 'secondary' && (
+          <div className="p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
+            <div className="flex items-start gap-2">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="h-4 w-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <span className="text-sm font-semibold text-amber-900">Secondary Vendor Editing Mode: </span>
+                <span className="text-sm text-amber-800">
+                  Only <strong>price fields (Retail Price, Wholesale Price)</strong> and <strong>Status</strong> are editable. All other fields are read-only.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bulk Edit Toolbar */}
-      {selectedRows.size > 0 && (
-        <div className="p-4 bg-blue-50 border-b border-blue-200">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="text-sm font-medium text-gray-700">
-              {selectedRows.size} row{selectedRows.size !== 1 ? 's' : ''} selected
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="bulk-field" className="text-sm text-gray-700">Field:</Label>
-              <Select value={bulkEditField} onValueChange={setBulkEditField}>
-                <SelectTrigger id="bulk-field" className="w-[180px]">
-                  <SelectValue placeholder="Select field" />
-                </SelectTrigger>
-                <SelectContent>
-                  {editableColumns.map(col => (
-                    <SelectItem key={col.id} value={col.id}>
-                      {col.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {renderBulkEditValue()}
+      {/* Pending Changes Action Bar */}
+      {hasPendingChanges && (
+        <div className="p-4 bg-yellow-50 border-b border-yellow-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-yellow-800 font-medium">
+              You have {pendingChangesCount} unsaved change{pendingChangesCount !== 1 ? 's' : ''}. Review and confirm to save.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDiscardChanges}
+              className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+            >
+              Discard Changes
+            </Button>
+            <Button
+              onClick={handleConfirmChanges}
+              className="bg-[#1976D2] hover:bg-[#1565C0] text-white"
+            >
+              Confirm & Save Changes
+            </Button>
           </div>
         </div>
       )}
@@ -1283,12 +1185,11 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
                   />
                 </td>
                 {sortedColumns.map((column) => {
-                  const value = getCellValue(article, column.id);
                   const editable = isEditable(column.id);
+                  const cellHasPendingChange = hasPendingChange(article.article_id, column.id);
+                  const displayValue = getDisplayValue(article, column.id);
 
-                  // Status is now editable, so we don't need special rendering
-
-                  if (editable && onUpdate) {
+                  if (editable) {
                     const fieldConfig = getFieldConfig(column.id);
                     // Map column IDs to actual article field names
                     const getArticleFieldName = (colId: string): string => {
@@ -1311,33 +1212,26 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
                       }
                     };
                     const articleFieldName = getArticleFieldName(column.id);
-                    let rawValue: any;
-                    if (vendorMode === 'secondary') {
-                      switch (column.id) {
-                        case 'status': rawValue = (article as any).secondary_active_code || value; break;
-                        case 'retail_price': rawValue = (article as any).secondary_retail_price || value; break;
-                        case 'wholesale_price': rawValue = (article as any).secondary_wholesale_price || value; break;
-                        default: rawValue = value;
-                      }
-                    } else {
-                      switch (column.id) {
-                        case 'status': rawValue = (article as any).primary_active_code || article.active_code || value; break;
-                        case 'retail_price': rawValue = (article as any).primary_retail_price || article.retail_price || value; break;
-                        case 'wholesale_price': rawValue = (article as any).primary_wholesale_price || article.wholesale_price || value; break;
-                        default: rawValue = value;
-                      }
-                    }
+                    let rawValue: any = displayValue;
                     
-                  return (
-                    <td 
-                      key={column.id} 
-                      className={`px-4 py-3 whitespace-nowrap text-sm ${
-                        vendorMode === 'secondary' && isEditable(column.id) 
-                          ? 'bg-amber-50/50 border-l-4 border-amber-500' 
-                          : ''
-                      }`}
-                      title={vendorMode === 'secondary' && isEditable(column.id) ? 'Editable in secondary vendor mode' : ''}
-                    >
+                    return (
+                      <td 
+                        key={column.id} 
+                        className={`px-4 py-3 whitespace-nowrap text-sm ${
+                          cellHasPendingChange 
+                            ? 'bg-yellow-100 border-l-4 border-yellow-500' 
+                            : vendorMode === 'secondary' && isEditable(column.id) 
+                              ? 'bg-amber-50/50 border-l-4 border-amber-500' 
+                              : ''
+                        }`}
+                        title={
+                          cellHasPendingChange 
+                            ? 'This value has been changed (pending confirmation)' 
+                            : vendorMode === 'secondary' && isEditable(column.id) 
+                              ? 'Editable in secondary vendor mode' 
+                              : ''
+                        }
+                      >
                         <SmartEditableCell
                           value={rawValue}
                           onSave={(newValue) => {
@@ -1353,32 +1247,42 @@ export function ResultsGrid({ results, loading, hasSearchCriteria = false, onUpd
                             } else {
                               finalValue = String(newValue);
                             }
-                            // Use the correct article field name for saving
-                            handleCellUpdate(article.article_id, articleFieldName, finalValue);
+                            // Track as pending change instead of immediately committing
+                            handleCellUpdate(article.article_id, articleFieldName, finalValue, column.id);
                           }}
                           fieldType={fieldConfig.type}
                           options={fieldConfig.options}
-                          className={vendorMode === 'secondary' && isEditable(column.id) ? 'ring-1 ring-amber-400 rounded' : ''}
+                          className={
+                            cellHasPendingChange 
+                              ? 'ring-2 ring-yellow-400 rounded font-medium' 
+                              : vendorMode === 'secondary' && isEditable(column.id) 
+                                ? 'ring-1 ring-amber-400 rounded' 
+                                : ''
+                          }
                           isEditable={true}
                         />
                       </td>
                     );
                   }
 
-                  const displayValue = column.id.includes('price') && typeof value === 'number'
-                    ? formatPrice(value)
-                    : value;
+                  // Read-only cell
+                  const formattedValue = column.id.includes('price') && typeof displayValue === 'number'
+                    ? formatPrice(displayValue)
+                    : displayValue;
 
                   return (
                     <td 
                       key={column.id} 
                       className={`px-4 py-3 whitespace-nowrap text-sm ${
-                        vendorMode === 'secondary' 
-                          ? 'text-gray-500 bg-gray-50/50' 
-                          : 'text-gray-600'
+                        cellHasPendingChange 
+                          ? 'bg-yellow-100 border-l-4 border-yellow-500' 
+                          : vendorMode === 'secondary' 
+                            ? 'text-gray-500 bg-gray-50/50' 
+                            : 'text-gray-600'
                       }`}
+                      title={cellHasPendingChange ? 'This value has been changed (pending confirmation)' : ''}
                     >
-                      <span>{displayValue}</span>
+                      <span className={cellHasPendingChange ? 'font-medium' : ''}>{formattedValue}</span>
                     </td>
                   );
                 })}

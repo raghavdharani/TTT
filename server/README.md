@@ -56,3 +56,8 @@ CLIENT_URL=http://localhost:5173 npm start
 - `game-reset`: Game was reset
 - `player-left`: A player disconnected
 - `error`: An error occurred
+
+
+
+
+

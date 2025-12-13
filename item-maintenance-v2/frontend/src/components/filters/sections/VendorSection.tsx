@@ -2,11 +2,10 @@
  * Vendor Filter Section
  */
 
-import React from 'react';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '../../ui/accordion';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { MultiSelect } from '../../ui/multi-select';
 import { RadioGroup, RadioGroupItem } from '../../ui/radio-group';
 
 interface VendorSectionProps {
@@ -20,10 +19,10 @@ interface VendorSectionProps {
 }
 
 export function VendorSection({ value, onChange, currentVendorMode = 'primary' }: VendorSectionProps) {
-  const handleVendorNameChange = (selected: string) => {
+  const handleVendorNameChange = (selected: string[]) => {
     onChange?.({
       ...value,
-      vendorName: selected ? [selected] : undefined,
+      vendorName: selected.length > 0 ? selected : undefined,
     });
   };
 
@@ -49,22 +48,24 @@ export function VendorSection({ value, onChange, currentVendorMode = 'primary' }
       <AccordionContent className="space-y-4 pb-4">
         <div className="space-y-2">
           <Label htmlFor="vendor-name" className="text-gray-700">Vendor Name</Label>
-          <Select
-            value={value?.vendorName?.[0] || ''}
-            onValueChange={handleVendorNameChange}
-          >
-            <SelectTrigger id="vendor-name" className="rounded-lg">
-              <SelectValue placeholder="Select vendor" />
-            </SelectTrigger>
-            <SelectContent>
-              {/* TODO: Populate vendor list */}
-              <SelectItem value="000001">Vendor 000001</SelectItem>
-              <SelectItem value="000002">Vendor 000002</SelectItem>
-              <SelectItem value="000003">Vendor 000003</SelectItem>
-              <SelectItem value="000004">Vendor 000004</SelectItem>
-              <SelectItem value="000005">Vendor 000005</SelectItem>
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            id="vendor-name"
+            options={[
+              { value: 'Oscar de la Renta', label: 'Oscar de la Renta' },
+              { value: 'Vendor A', label: 'Vendor A' },
+              { value: 'Vendor B', label: 'Vendor B' },
+              { value: 'Vendor C', label: 'Vendor C' },
+              { value: 'Vendor D', label: 'Vendor D' },
+              { value: 'Vendor E', label: 'Vendor E' },
+              { value: 'Vendor F', label: 'Vendor F' },
+              { value: 'Vendor G', label: 'Vendor G' },
+              { value: 'Vendor H', label: 'Vendor H' },
+              { value: 'Vendor I', label: 'Vendor I' },
+            ]}
+            value={value?.vendorName || []}
+            onChange={handleVendorNameChange}
+            placeholder="Select vendor(s)"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="vendor-color" className="text-gray-700">Vendor Color</Label>
@@ -101,4 +102,3 @@ export function VendorSection({ value, onChange, currentVendorMode = 'primary' }
     </AccordionItem>
   );
 }
-

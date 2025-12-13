@@ -9,12 +9,16 @@ export interface SearchFilters {
     sku?: string;
     description?: string;
     size?: string;
-    color?: string;
+    color?: string[]; // Multi-select
   };
   hierarchy?: {
     departments?: string[];
     classes?: string[];
     subclasses?: string[];
+    subDept?: string[]; // Multi-select
+    attribute1?: string[]; // Multi-select
+    attribute2?: string[]; // Multi-select
+    attribute3?: string[];
   };
   activity?: {
     status?: string[];
