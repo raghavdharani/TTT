@@ -1,3 +1,5 @@
+import { Token } from './tokens'
+
 function GameStatus({
   currentPlayer,
   winner,
@@ -36,19 +38,43 @@ function GameStatus({
   const getStatusMessage = () => {
     if (seriesWinner) {
       if (seriesWinner === 'X') {
-        return 'Player X Wins the Series!'
+        return (
+          <span className="flex items-center justify-center gap-2">
+            <span>Player</span>
+            <Token value="X" size="small" />
+            <span>Wins the Series!</span>
+          </span>
+        )
       }
       if (seriesWinner === 'O') {
-        return 'Player O Wins the Series!'
+        return (
+          <span className="flex items-center justify-center gap-2">
+            <span>Player</span>
+            <Token value="O" size="small" />
+            <span>Wins the Series!</span>
+          </span>
+        )
       }
       return "Series Draw!"
     }
     
     if (gameOver && winner === 'X') {
-      return 'Player X Wins This Game!'
+      return (
+        <span className="flex items-center justify-center gap-2">
+          <span>Player</span>
+          <Token value="X" size="small" />
+          <span>Wins This Game!</span>
+        </span>
+      )
     }
     if (gameOver && winner === 'O') {
-      return 'Player O Wins This Game!'
+      return (
+        <span className="flex items-center justify-center gap-2">
+          <span>Player</span>
+          <Token value="O" size="small" />
+          <span>Wins This Game!</span>
+        </span>
+      )
     }
     if (gameOver && winner === 'draw') {
       return "It's a Draw!"
@@ -60,12 +86,30 @@ function GameStatus({
       return "Computer's turn..."
     }
     if (isRelocating) {
-      return `Player ${currentPlayer} is moving a token. Choose a new square.`
+      return (
+        <span className="flex items-center justify-center gap-2">
+          <span>Player</span>
+          <Token value={currentPlayer} size="small" />
+          <span>is moving a token. Choose a new square.</span>
+        </span>
+      )
     }
     if (!canPlaceNewToken) {
-      return `Player ${currentPlayer} has ${currentPlayerTokenCount}/${tokenLimit} tokens. Click a token to relocate it.`
+      return (
+        <span className="flex items-center justify-center gap-2">
+          <span>Player</span>
+          <Token value={currentPlayer} size="small" />
+          <span>has {currentPlayerTokenCount}/{tokenLimit} tokens. Click a token to relocate it.</span>
+        </span>
+      )
     }
-    return `Current Player: ${currentPlayer} (${currentPlayerTokenCount}/${tokenLimit} tokens)`
+    return (
+      <span className="flex items-center justify-center gap-2">
+        <span>Current Player:</span>
+        <Token value={currentPlayer} size="small" />
+        <span>({currentPlayerTokenCount}/{tokenLimit} tokens)</span>
+      </span>
+    )
   }
 
   const seriesInfo = getSeriesInfo()
