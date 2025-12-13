@@ -16,32 +16,55 @@ if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
   console.warn('⚠️  WARNING: CLIENT_URL not set in production. Allowing all origins. Set CLIENT_URL for security.');
 }
 
+// CORS handler function
+const corsHandler = (origin, callback) => {
+  // Allow requests with no origin (like mobile apps, curl, or same-origin requests)
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+  
+  // If '*' is in allowedOrigins, allow all
+  if (allowedOrigins.includes('*')) {
+    callback(null, true);
+    return;
+  }
+  
+  // Check if origin matches any allowed origin (exact match or subdomain)
+  const isAllowed = allowedOrigins.some(allowed => {
+    if (allowed === origin) return true;
+    // Allow subdomains (e.g., *.vercel.app matches ttt-seven-taupe.vercel.app)
+    if (allowed.startsWith('*.')) {
+      const domain = allowed.substring(2);
+      return origin.endsWith('.' + domain) || origin === domain;
+    }
+    return false;
+  });
+  
+  if (isAllowed) {
+    callback(null, true);
+  } else {
+    console.warn(`CORS blocked origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+    callback(new Error('Not allowed by CORS'));
+  }
+};
+
 const io = new Server(httpServer, {
   cors: {
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST'],
+    origin: corsHandler,
+    methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   },
   transports: ['websocket', 'polling'], // Explicitly allow both transports
   allowEIO3: true, // Allow Engine.IO v3 clients
 });
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: corsHandler,
   credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 
