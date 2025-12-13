@@ -52,9 +52,20 @@ function OnlineGameSetup({ onStart, onCancel }) {
   useEffect(() => {
     const sock = getSocket();
     setSocket(sock);
+    
+    // Log connection details for debugging
+    const socketUrl = sock.io?.uri || 'unknown';
+    console.log('[OnlineGameSetup] Initializing socket:', {
+      url: socketUrl,
+      connected: sock.connected,
+      envVar: import.meta.env.VITE_SOCKET_URL,
+      localStorage: localStorage.getItem('socket_server_url'),
+      isProduction: isProduction
+    });
 
     // Check connection status and connect if not connected
     if (!sock.connected) {
+      console.log('[OnlineGameSetup] Socket not connected, attempting to connect...');
       sock.connect();
     }
 
@@ -65,24 +76,44 @@ function OnlineGameSetup({ onStart, onCancel }) {
     };
 
     const handleConnect = () => {
-      console.log('Socket connected');
+      const socketUrl = sock.io?.uri || 'unknown';
+      console.log('[Socket] Connected to:', socketUrl);
       setError(null);
       updateConnectionStatus();
     };
 
     const handleDisconnect = () => {
-      console.log('Socket disconnected');
+      console.log('[Socket] Disconnected');
       setError('Connection lost. Please check if the server is running.');
       setIsConnecting(false);
       setWaitingForPlayer(false);
     };
 
     const handleConnectError = (err) => {
-      console.error('Connection error:', err);
+      const socketUrl = sock.io?.uri || 'unknown';
+      console.error('[Socket] Connection error:', {
+        message: err.message,
+        type: err.type,
+        description: err.description,
+        url: socketUrl,
+        envVar: import.meta.env.VITE_SOCKET_URL,
+        localStorage: localStorage.getItem('socket_server_url')
+      });
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:62',message:'handleConnectError',data:{errorMessage:err.message,errorType:err.type,errorDescription:err.description,errorData:err.data,socketId:sock.id,connected:sock.connected},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:80',message:'handleConnectError',data:{errorMessage:err.message,errorType:err.type,errorDescription:err.description,errorData:err.data,socketId:sock.id,connected:sock.connected,url:socketUrl,envVar:import.meta.env.VITE_SOCKET_URL},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
-      setError('Failed to connect to server. Make sure the server is running on port 3001.');
+      
+      // More specific error message based on URL
+      let errorMsg = 'Failed to connect to server.';
+      if (socketUrl.includes('localhost')) {
+        errorMsg += ' Make sure the server is running on port 3001.';
+      } else if (socketUrl.includes('railway') || socketUrl.includes('up.railway.app')) {
+        errorMsg += ' Check Railway server status and CORS settings.';
+      } else {
+        errorMsg += ` Server URL: ${socketUrl}`;
+      }
+      
+      setError(errorMsg);
       setIsConnecting(false);
       // Retry connection after a delay
       setTimeout(() => {
