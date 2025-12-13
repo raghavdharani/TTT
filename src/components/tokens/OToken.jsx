@@ -22,18 +22,14 @@ function OToken({ size = 'default', className = '', animated = false, spinDurati
   return (
     <svg
       className={`${sizeClass} ${animationClass} ${className}`}
-      style={{
-        ...animationStyle,
-        imageRendering: 'crisp-edges',
-        WebkitImageRendering: 'crisp-edges',
-      }}
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label="O token"
       shapeRendering="geometricPrecision"
-      style={{ 
+      style={{
+        ...animationStyle,
         imageRendering: 'crisp-edges',
         WebkitImageRendering: 'crisp-edges',
       }}
