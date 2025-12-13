@@ -26,23 +26,38 @@ const getSocketUrl = () => {
   // #endregion
   let url = null;
   
-  // Priority order:
-  // 1. Runtime override (window.__SOCKET_URL__)
-  // 2. Environment variable (VITE_SOCKET_URL) - for production
-  // 3. LocalStorage (for development/override)
-  // 4. Default localhost
+  // Priority order (STRICT - no fallbacks that could cause regressions):
+  // 1. Runtime override (window.__SOCKET_URL__) - highest priority
+  // 2. Environment variable (VITE_SOCKET_URL) - for production, MUST be set
+  // 3. LocalStorage (ONLY if env var not set - for development)
+  // 4. Default localhost (ONLY if env var not set - for local development)
   
   if (typeof window !== 'undefined' && window.__SOCKET_URL__) {
     url = window.__SOCKET_URL__;
   } else if (import.meta.env.VITE_SOCKET_URL) {
-    // Prioritize env var over localStorage in production
-    // Handle case where env var might be set without protocol
+    // CRITICAL: In production, env var MUST be used - never fall back to localStorage
     url = import.meta.env.VITE_SOCKET_URL;
+    // Clear any localhost value from localStorage to prevent confusion
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('socket_server_url');
+      if (stored && stored.includes('localhost')) {
+        console.warn('[Socket] Clearing localhost from localStorage - using env var instead');
+        localStorage.removeItem('socket_server_url');
+      }
+    }
   } else if (typeof window !== 'undefined') {
+    // Only use localStorage if env var is NOT set (development mode)
     const stored = localStorage.getItem('socket_server_url');
-    if (stored) url = stored;
+    if (stored && !stored.includes('localhost')) {
+      // Only use non-localhost values from localStorage
+      url = stored;
+    } else if (stored && stored.includes('localhost')) {
+      // If localStorage has localhost, use it (for local dev)
+      url = stored;
+    }
   }
   
+  // Only fall back to localhost if nothing else is set (local development)
   if (!url) {
     url = 'http://localhost:3001';
   }
@@ -51,14 +66,22 @@ const getSocketUrl = () => {
   // This handles cases where VITE_SOCKET_URL is set without https://
   url = normalizeUrl(url);
   
-  // Debug logging (only in browser)
+  // Debug logging (always log in browser for debugging)
   if (typeof window !== 'undefined') {
     const source = window.__SOCKET_URL__ ? 'window' : import.meta.env.VITE_SOCKET_URL ? 'env' : localStorage.getItem('socket_server_url') ? 'localStorage' : 'default';
-    console.log('[Socket] URL source:', source, '| Original:', import.meta.env.VITE_SOCKET_URL || localStorage.getItem('socket_server_url') || 'default', '| Final URL:', url);
+    const envVar = import.meta.env.VITE_SOCKET_URL;
+    const localStorageVal = localStorage.getItem('socket_server_url');
+    console.log('[Socket] URL resolution:', {
+      source,
+      envVar: envVar || '(not set)',
+      localStorage: localStorageVal || '(not set)',
+      finalUrl: url,
+      warning: envVar ? null : 'VITE_SOCKET_URL not set - using fallback'
+    });
   }
   
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'socket.js:50',message:'getSocketUrl result',data:{originalUrl:import.meta.env.VITE_SOCKET_URL||localStorage.getItem('socket_server_url')||'default',normalizedUrl:url,hasProtocol:url.startsWith('http://')||url.startsWith('https://'),envVar:import.meta.env.VITE_SOCKET_URL,source:window.__SOCKET_URL__?'window':import.meta.env.VITE_SOCKET_URL?'env':localStorage.getItem('socket_server_url')?'localStorage':'default'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'socket.js:63',message:'getSocketUrl result',data:{originalUrl:import.meta.env.VITE_SOCKET_URL||localStorage.getItem('socket_server_url')||'default',normalizedUrl:url,hasProtocol:url.startsWith('http://')||url.startsWith('https://'),envVar:import.meta.env.VITE_SOCKET_URL,source:window.__SOCKET_URL__?'window':import.meta.env.VITE_SOCKET_URL?'env':localStorage.getItem('socket_server_url')?'localStorage':'default'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
   // #endregion
   return url;
 };
