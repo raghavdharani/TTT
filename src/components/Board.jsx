@@ -21,13 +21,9 @@ function Board({
 
     // When relocating, allow placing on empty adjacent squares OR switching to another token
     if (isRelocating) {
-      // CRITICAL: When relocating, player must be at token limit
       // Allow switching to a different token of the same player (if it can move)
+      // Players can move tokens at any time, not just when at token limit
       if (value === currentPlayer) {
-        // Can only switch if at token limit (should always be true when relocating, but check for safety)
-        if (currentPlayerTokenCount < tokenLimit) {
-          return false
-        }
         return canTokenMove(squares, index)
       }
       // Enable empty squares if adjacent to the token being moved OR it's the original location
