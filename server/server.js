@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { validateAndApplyMove } from './gameRules.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -213,140 +214,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Import game rules (using CommonJS require for Node.js)
-  // Note: We'll need to create a server-compatible version or use the same module
-  // For now, we'll keep the functions here but ensure they match the client rules
-  const TOKEN_LIMIT = 3;
-  
-  const countTokens = (squares, player) => {
-    return squares.reduce((count, square) => (square === player ? count + 1 : count), 0);
-  };
-
-  const getAdjacentIndices = (index) => {
-    const row = Math.floor(index / 3);
-    const col = index % 3;
-    const adjacent = [];
-    if (row > 0) adjacent.push((row - 1) * 3 + col);
-    if (row < 2) adjacent.push((row + 1) * 3 + col);
-    if (col > 0) adjacent.push(row * 3 + (col - 1));
-    if (col < 2) adjacent.push(row * 3 + (col + 1));
-    return adjacent;
-  };
-
-  const canTokenMove = (squares, index) => {
-    const adjacentIndices = getAdjacentIndices(index);
-    return adjacentIndices.some((adjIndex) => squares[adjIndex] === null);
-  };
-
-  const isAdjacent = (sourceIndex, targetIndex) => {
-    return getAdjacentIndices(sourceIndex).includes(targetIndex);
-  };
-
-  // Use centralized validation functions (matching client rules)
-  const canPlaceNewToken = (squares, player, tokenToMoveIndex = null) => {
-    if (tokenToMoveIndex !== null) {
-      return { valid: false, error: 'Cannot place new token while relocating. Complete or cancel the relocation first.' };
-    }
-    const tokenCount = countTokens(squares, player);
-    if (tokenCount >= TOKEN_LIMIT) {
-      return { valid: false, error: `Cannot place more tokens. You have reached the limit of ${TOKEN_LIMIT} tokens. Move an existing token instead.` };
-    }
-    return { valid: true };
-  };
-
-  const canPickupToken = (squares, player, fromIndex) => {
-    if (squares[fromIndex] !== player) {
-      return { valid: false, error: 'Can only pick up your own tokens' };
-    }
-    if (!canTokenMove(squares, fromIndex)) {
-      return { valid: false, error: 'This token cannot move (no adjacent empty squares)' };
-    }
-    return { valid: true };
-  };
-
-  const canRelocateToken = (squares, player, fromIndex, toIndex, tokenToMoveIndex) => {
-    if (tokenToMoveIndex === null || tokenToMoveIndex !== fromIndex) {
-      return { valid: false, error: 'Invalid relocation. Pick up a token first.' };
-    }
-    if (squares[toIndex] !== null) {
-      return { valid: false, error: 'Cannot relocate to occupied square' };
-    }
-    if (!isAdjacent(fromIndex, toIndex)) {
-      return { valid: false, error: 'Can only move tokens to adjacent squares' };
-    }
-    return { valid: true };
-  };
-
-  const validateAndApplyMove = (squares, moveType, player, fromIndex, toIndex, currentTokenToMoveIndex = null) => {
-    let validation;
-
-    switch (moveType) {
-      case 'place':
-        validation = canPlaceNewToken(squares, player, currentTokenToMoveIndex);
-        if (!validation.valid) return validation;
-        if (squares[toIndex] !== null) {
-          return { valid: false, error: 'Cannot place token on occupied square' };
-        }
-        break;
-
-      case 'pickup':
-        validation = canPickupToken(squares, player, fromIndex);
-        if (!validation.valid) return validation;
-        break;
-
-      case 'relocate':
-        validation = canRelocateToken(squares, player, fromIndex, toIndex, currentTokenToMoveIndex);
-        if (!validation.valid) return validation;
-        break;
-
-      case 'cancel-relocate':
-        if (currentTokenToMoveIndex === null || currentTokenToMoveIndex !== fromIndex) {
-          return { valid: false, error: 'Invalid cancel. No token being relocated.' };
-        }
-        break;
-
-      default:
-        return { valid: false, error: 'Invalid move type' };
-    }
-
-    // Apply the move
-    const newSquares = [...squares];
-    let newTokenToMoveIndex = currentTokenToMoveIndex;
-    let shouldSwitchTurn = false;
-
-    switch (moveType) {
-      case 'place':
-        newSquares[toIndex] = player;
-        newTokenToMoveIndex = null;
-        shouldSwitchTurn = true;
-        break;
-
-      case 'pickup':
-        newSquares[fromIndex] = null;
-        newTokenToMoveIndex = fromIndex;
-        shouldSwitchTurn = false;
-        break;
-
-      case 'relocate':
-        newSquares[toIndex] = player;
-        newTokenToMoveIndex = null;
-        shouldSwitchTurn = true;
-        break;
-
-      case 'cancel-relocate':
-        newSquares[fromIndex] = player;
-        newTokenToMoveIndex = null;
-        shouldSwitchTurn = false;
-        break;
-    }
-
-    return {
-      valid: true,
-      squares: newSquares,
-      tokenToMoveIndex: newTokenToMoveIndex,
-      shouldSwitchTurn,
-    };
-  };
 
   // Make a move
   socket.on('make-move', ({ moveType, fromIndex, toIndex }) => {
