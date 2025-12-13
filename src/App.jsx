@@ -385,6 +385,16 @@ function App() {
         }
         
         const handleError = ({ message }) => {
+          console.error('[App] Socket error:', message);
+          // Don't show alert for "Not in a room" - try to rejoin silently
+          if (message.includes('Not in a room') || message.includes('Room not found') || message.includes('Player not found')) {
+            console.log('[App] Attempting to rejoin room...');
+            // Try to rejoin the room if we have roomId
+            if (onlineRoomId && onlineSocket) {
+              onlineSocket.emit('join-room', { roomId: onlineRoomId });
+            }
+            return;
+          }
           alert(`Error: ${message}`)
         }
         
