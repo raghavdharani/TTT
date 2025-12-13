@@ -163,32 +163,43 @@ function OnlineGameSetup({ onStart, onCancel }) {
     sock.on('error', handleError);
 
     const handleGameStart = ({ roomId: eventRoomId, gameState, players: roomPlayers, gameMode: roomGameMode, startingPlayer: roomStartingPlayer }) => {
-      // Game is starting - use room settings
-      const finalGameMode = roomGameMode || gameMode || 1;
-      const finalStartingPlayer = roomStartingPlayer || startingPlayer || 'X';
-      
-      // Get player symbol from event data or ref
-      const myPlayer = roomPlayers?.find((p) => p.id === sock.id);
-      const finalPlayerSymbol = myPlayer?.symbol || playerSymbolRef.current;
-      
-      // Get roomId from event data (most reliable) or ref as fallback
-      const finalRoomId = eventRoomId || roomIdRef.current;
-      
-      console.log('Game starting:', { finalRoomId, finalPlayerSymbol, finalGameMode, finalStartingPlayer });
-      
-      if (!finalRoomId) {
-        console.error('Room ID is missing when starting game');
-        setError('Room ID is missing. Please try creating a new room.');
-        return;
+      try {
+        // Game is starting - use room settings
+        const finalGameMode = roomGameMode || gameMode || 1;
+        const finalStartingPlayer = roomStartingPlayer || startingPlayer || 'X';
+        
+        // Get player symbol from event data or ref
+        const myPlayer = roomPlayers?.find((p) => p.id === sock.id);
+        const finalPlayerSymbol = myPlayer?.symbol || playerSymbolRef.current;
+        
+        // Get roomId from event data (most reliable) or ref as fallback
+        const finalRoomId = eventRoomId || roomIdRef.current;
+        
+        console.log('[OnlineGameSetup] Game starting:', { finalRoomId, finalPlayerSymbol, finalGameMode, finalStartingPlayer, socketConnected: sock.connected });
+        
+        if (!finalRoomId) {
+          console.error('[OnlineGameSetup] Room ID is missing when starting game');
+          setError('Room ID is missing. Please try creating a new room.');
+          return;
+        }
+        
+        if (!finalPlayerSymbol) {
+          console.error('[OnlineGameSetup] Player symbol is missing when starting game');
+          setError('Player symbol is missing. Please try creating a new room.');
+          return;
+        }
+        
+        if (!sock || !sock.connected) {
+          console.error('[OnlineGameSetup] Socket not connected when starting game');
+          setError('Socket connection lost. Please reconnect and try again.');
+          return;
+        }
+        
+        onStart('online', finalGameMode, finalStartingPlayer, null, finalRoomId, sock, finalPlayerSymbol);
+      } catch (error) {
+        console.error('[OnlineGameSetup] Error in handleGameStart:', error);
+        setError(`Error starting game: ${error.message}`);
       }
-      
-      if (!finalPlayerSymbol) {
-        console.error('Player symbol is missing when starting game');
-        setError('Player symbol is missing. Please try creating a new room.');
-        return;
-      }
-      
-      onStart('online', finalGameMode, finalStartingPlayer, null, finalRoomId, sock, finalPlayerSymbol);
     };
 
     sock.on('game-start', handleGameStart);
@@ -207,34 +218,52 @@ function OnlineGameSetup({ onStart, onCancel }) {
   }, []); // Only run once on mount
 
   const handleCreateRoom = () => {
-    if (!gameMode || !startingPlayer) {
-      setError('Please select game mode and starting player');
-      return;
-    }
-
-    if (!socket || !socket.connected) {
-      setError('Not connected to server. Please wait for connection or check server URL.');
-      return;
-    }
-
-    setIsConnecting(true);
-    setError(null);
-    setWaitingForPlayer(false);
-    setRoomCreated(false);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:162',message:'Creating room',data:{gameMode,startingPlayer,socketConnected:socket.connected,socketId:socket.id},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
-    
-    socket.emit('create-room', { gameMode, startingPlayer });
-    
-    // Set a timeout to show error if room creation doesn't respond
-    setTimeout(() => {
-      if (!roomCreatedRef.current && !waitingForPlayerRef.current) {
-        setError('Failed to create room. Please try again.');
-        setIsConnecting(false);
+    try {
+      if (!gameMode || !startingPlayer) {
+        setError('Please select game mode and starting player');
+        return;
       }
-    }, 5000);
+
+      const currentSocket = socket || getSocket();
+      
+      if (!currentSocket) {
+        setError('Socket not initialized. Please refresh the page.');
+        return;
+      }
+
+      if (!currentSocket.connected) {
+        console.log('[OnlineGameSetup] Socket not connected, attempting to connect...');
+        currentSocket.connect();
+        setError('Connecting to server... Please wait and try again.');
+        return;
+      }
+
+      setIsConnecting(true);
+      setError(null);
+      setWaitingForPlayer(false);
+      setRoomCreated(false);
+      
+      console.log('[OnlineGameSetup] Creating room:', { gameMode, startingPlayer, socketConnected: currentSocket.connected, socketId: currentSocket.id });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OnlineGameSetup.jsx:209',message:'Creating room',data:{gameMode,startingPlayer,socketConnected:currentSocket.connected,socketId:currentSocket.id},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+      
+      currentSocket.emit('create-room', { gameMode, startingPlayer });
+      
+      // Set a timeout to show error if room creation doesn't respond
+      setTimeout(() => {
+        if (!roomCreatedRef.current && !waitingForPlayerRef.current) {
+          console.error('[OnlineGameSetup] Room creation timeout');
+          setError('Failed to create room. Please check your connection and try again.');
+          setIsConnecting(false);
+        }
+      }, 5000);
+    } catch (error) {
+      console.error('[OnlineGameSetup] Error in handleCreateRoom:', error);
+      setError(`Error creating room: ${error.message}`);
+      setIsConnecting(false);
+    }
   };
 
   const handleJoinRoom = () => {
