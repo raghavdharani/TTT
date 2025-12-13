@@ -1,4 +1,5 @@
 import Square from './Square'
+import { TOKEN_LIMIT, countTokens, canTokenMove, isAdjacent, canPlaceNewToken } from '../utils/gameRules'
 
 function Board({
   squares,
@@ -33,9 +34,10 @@ function Board({
       return false
     }
 
-    // Empty squares are enabled if player can place new tokens
+    // Empty squares are enabled if player can place new tokens (using centralized rules)
     if (value === null) {
-      return currentPlayerTokenCount < tokenLimit
+      const validation = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
+      return validation.valid
     }
 
     // Player's own tokens are enabled if they can move (at any time)

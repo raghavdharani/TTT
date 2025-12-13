@@ -8,40 +8,17 @@ import OnlineGameSetup from './components/OnlineGameSetup'
 import { calculateWinner, checkDraw } from './utils/gameLogic'
 import { getComputerMove } from './utils/ai'
 import { getSocket, disconnectSocket } from './utils/socket'
-
-const TOKEN_LIMIT = 3
-
-const countTokens = (squares, player) =>
-  squares.reduce((count, square) => (square === player ? count + 1 : count), 0)
-
-// Get adjacent square indices (up, down, left, right only - no diagonals)
-const getAdjacentIndices = (index) => {
-  const row = Math.floor(index / 3)
-  const col = index % 3
-  const adjacent = []
-
-  // Top (row - 1)
-  if (row > 0) adjacent.push((row - 1) * 3 + col)
-  // Bottom (row + 1)
-  if (row < 2) adjacent.push((row + 1) * 3 + col)
-  // Left (col - 1)
-  if (col > 0) adjacent.push(row * 3 + (col - 1))
-  // Right (col + 1)
-  if (col < 2) adjacent.push(row * 3 + (col + 1))
-
-  return adjacent
-}
-
-// Check if a token at the given index can move (has at least one empty adjacent square)
-const canTokenMove = (squares, index) => {
-  const adjacentIndices = getAdjacentIndices(index)
-  return adjacentIndices.some((adjIndex) => squares[adjIndex] === null)
-}
-
-// Check if target index is adjacent to source index
-const isAdjacent = (sourceIndex, targetIndex) => {
-  return getAdjacentIndices(sourceIndex).includes(targetIndex)
-}
+import {
+  TOKEN_LIMIT,
+  countTokens,
+  canTokenMove,
+  isAdjacent,
+  canPlaceNewToken,
+  canPickupToken,
+  canRelocateToken,
+  canCancelRelocate,
+  validateAndApplyMove,
+} from './utils/gameRules'
 
 function App() {
   // Game setup state
@@ -82,7 +59,8 @@ function App() {
   const currentPlayer = xIsNext ? 'X' : 'O'
   const currentPlayerTokenCount = countTokens(squares, currentPlayer)
   const isRelocating = tokenToMoveIndex !== null
-  const canPlaceNewToken = currentPlayerTokenCount < TOKEN_LIMIT
+  const canPlaceNewTokenResult = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
+  const canPlaceNewToken = canPlaceNewTokenResult.valid
   
   // Determine if current player is computer
   // In computer mode, the computer always plays as 'O'
@@ -241,25 +219,31 @@ function App() {
     }
 
     const valueAtIndex = squares[index]
-    const newSquares = [...squares]
 
     // If relocating, handle placement or switching tokens
     if (isRelocating) {
       // Allow switching to a different token of the same player
       if (valueAtIndex === currentPlayer) {
-        // Check if this token can move before allowing relocation
-        if (!canTokenMove(squares, index)) {
+        // Validate using centralized rules
+        const validation = canPickupToken(squares, currentPlayer, index)
+        if (!validation.valid) {
+          console.warn('Cannot switch token:', validation.error)
           return
         }
         
-        // Put the first token back and pick up the new one
-        newSquares[tokenToMoveIndex] = currentPlayer
-        newSquares[index] = null
-        setSquares(newSquares)
-        setTokenToMoveIndex(index)
-        // Emit pickup move for online mode
+        // For online mode: emit to server and wait for state update
         if (playMode === 'online' && socket) {
+          // First cancel current relocation
+          socket.emit('make-move', { moveType: 'cancel-relocate', fromIndex: tokenToMoveIndex, toIndex: null })
+          // Then pick up new token
           socket.emit('make-move', { moveType: 'pickup', fromIndex: index, toIndex: null })
+        } else {
+          // Offline mode: update immediately
+          const newSquares = [...squares]
+          newSquares[tokenToMoveIndex] = currentPlayer
+          newSquares[index] = null
+          setSquares(newSquares)
+          setTokenToMoveIndex(index)
         }
         return
       }
@@ -271,56 +255,143 @@ function App() {
 
       // If placing token in the same location, cancel relocation without switching turns
       if (index === tokenToMoveIndex) {
-        newSquares[index] = currentPlayer
-        setSquares(newSquares)
-        setTokenToMoveIndex(null)
-        // Emit cancel move for online mode
         if (playMode === 'online' && socket) {
           socket.emit('make-move', { moveType: 'cancel-relocate', fromIndex: tokenToMoveIndex, toIndex: null })
+        } else {
+          const newSquares = [...squares]
+          newSquares[index] = currentPlayer
+          setSquares(newSquares)
+          setTokenToMoveIndex(null)
         }
         return
       }
 
-      // Check if target square is adjacent to the source
-      if (!isAdjacent(tokenToMoveIndex, index)) {
+      // Validate relocation using centralized rules
+      const validation = canRelocateToken(squares, currentPlayer, tokenToMoveIndex, index, tokenToMoveIndex)
+      if (!validation.valid) {
+        console.warn('Cannot relocate:', validation.error)
         return
       }
 
-      newSquares[index] = currentPlayer
-      finalizeMove(newSquares, 'relocate', tokenToMoveIndex, index)
+      // For online mode: emit to server and wait for state update
+      if (playMode === 'online' && socket) {
+        socket.emit('make-move', { moveType: 'relocate', fromIndex: tokenToMoveIndex, toIndex: index })
+      } else {
+        // Offline mode: apply move immediately
+        const result = validateAndApplyMove(squares, 'relocate', currentPlayer, tokenToMoveIndex, index, tokenToMoveIndex)
+        if (result.valid) {
+          setSquares(result.squares)
+          setTokenToMoveIndex(result.tokenToMoveIndex)
+          if (result.shouldSwitchTurn) {
+            setXIsNext((prev) => !prev)
+          }
+          // Check for winner/draw
+          const winner = calculateWinner(result.squares)
+          if (winner) {
+            setWinner(winner)
+            setGameOver(true)
+            setTokenToMoveIndex(null)
+            if (winner === 'X') {
+              const newXWins = xWins + 1
+              setXWins(newXWins)
+              const totalGames = newXWins + oWins
+              const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, totalGames)
+              if (seriesWin) setSeriesWinner(seriesWin)
+            } else {
+              const newOWins = oWins + 1
+              setOWins(newOWins)
+              const totalGames = xWins + newOWins
+              const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, totalGames)
+              if (seriesWin) setSeriesWinner(seriesWin)
+            }
+          } else if (checkDraw(result.squares)) {
+            setWinner('draw')
+            setGameOver(true)
+            setTokenToMoveIndex(null)
+            const totalGames = xWins + oWins + 1
+            const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, totalGames)
+            if (seriesWin) setSeriesWinner(seriesWin)
+          }
+        }
+      }
       return
     }
 
     // Allow clicking on your own tokens to move them (at any time)
     if (valueAtIndex === currentPlayer) {
-      // Check if this token can move before allowing relocation
-      if (!canTokenMove(squares, index)) {
+      // Validate using centralized rules
+      const validation = canPickupToken(squares, currentPlayer, index)
+      if (!validation.valid) {
+        console.warn('Cannot pick up token:', validation.error)
         return
       }
 
-      newSquares[index] = null
-      setSquares(newSquares)
-      setTokenToMoveIndex(index)
-      // Emit pickup move for online mode
+      // For online mode: emit to server and wait for state update (DO NOT update locally)
       if (playMode === 'online' && socket) {
         socket.emit('make-move', { moveType: 'pickup', fromIndex: index, toIndex: null })
+      } else {
+        // Offline mode: update immediately
+        const newSquares = [...squares]
+        newSquares[index] = null
+        setSquares(newSquares)
+        setTokenToMoveIndex(index)
       }
       return
     }
 
-    // Can only place new tokens if under the limit
+    // Can only place on empty squares
     if (valueAtIndex !== null) {
       return
     }
 
-    // CRITICAL: Can only place new tokens when under token limit
-    // If at limit (3 tokens), must move existing tokens instead
-    if (!canPlaceNewToken) {
+    // Validate placement using centralized rules
+    const validation = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
+    if (!validation.valid) {
+      console.warn('Cannot place token:', validation.error)
       return
     }
 
-    newSquares[index] = currentPlayer
-    finalizeMove(newSquares, 'place', null, index)
+    // For online mode: emit to server and wait for state update (DO NOT update locally)
+    if (playMode === 'online' && socket) {
+      socket.emit('make-move', { moveType: 'place', fromIndex: null, toIndex: index })
+    } else {
+      // Offline mode: apply move immediately
+      const result = validateAndApplyMove(squares, 'place', currentPlayer, null, index, tokenToMoveIndex)
+      if (result.valid) {
+        setSquares(result.squares)
+        setTokenToMoveIndex(result.tokenToMoveIndex)
+        if (result.shouldSwitchTurn) {
+          setXIsNext((prev) => !prev)
+        }
+        // Check for winner/draw
+        const winner = calculateWinner(result.squares)
+        if (winner) {
+          setWinner(winner)
+          setGameOver(true)
+          setTokenToMoveIndex(null)
+          if (winner === 'X') {
+            const newXWins = xWins + 1
+            setXWins(newXWins)
+            const totalGames = newXWins + oWins
+            const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, totalGames)
+            if (seriesWin) setSeriesWinner(seriesWin)
+          } else {
+            const newOWins = oWins + 1
+            setOWins(newOWins)
+            const totalGames = xWins + newOWins
+            const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, totalGames)
+            if (seriesWin) setSeriesWinner(seriesWin)
+          }
+        } else if (checkDraw(result.squares)) {
+          setWinner('draw')
+          setGameOver(true)
+          setTokenToMoveIndex(null)
+          const totalGames = xWins + oWins + 1
+          const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, totalGames)
+          if (seriesWin) setSeriesWinner(seriesWin)
+        }
+      }
+    }
   }
 
   const handleGameStart = (newPlayMode, mode, startingPlayer, newDifficulty, onlineRoomId = null, onlineSocket = null, onlinePlayerSymbol = null) => {
