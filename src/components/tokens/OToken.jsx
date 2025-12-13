@@ -46,9 +46,9 @@ function OToken({ size = 'default', className = '', animated = false, spinDurati
       <circle
         cx="50"
         cy="50"
-        r="36"
+        r="38"
         stroke="#2563eb"
-        strokeWidth="10"
+        strokeWidth="6"
         fill="none"
         vectorEffect="non-scaling-stroke"
         filter="url(#o-glow)"
