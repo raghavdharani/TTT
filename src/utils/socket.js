@@ -36,6 +36,7 @@ const getSocketUrl = () => {
     url = window.__SOCKET_URL__;
   } else if (import.meta.env.VITE_SOCKET_URL) {
     // Prioritize env var over localStorage in production
+    // Handle case where env var might be set without protocol
     url = import.meta.env.VITE_SOCKET_URL;
   } else if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('socket_server_url');
@@ -46,19 +47,20 @@ const getSocketUrl = () => {
     url = 'http://localhost:3001';
   }
   
-  // Normalize URL to ensure it has a protocol
-  const normalizedUrl = normalizeUrl(url);
+  // Always normalize - ensure protocol is present
+  // This handles cases where VITE_SOCKET_URL is set without https://
+  url = normalizeUrl(url);
   
   // Debug logging (only in browser)
-  if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  if (typeof window !== 'undefined') {
     const source = window.__SOCKET_URL__ ? 'window' : import.meta.env.VITE_SOCKET_URL ? 'env' : localStorage.getItem('socket_server_url') ? 'localStorage' : 'default';
-    console.log('[Socket] URL source:', source, '| URL:', normalizedUrl);
+    console.log('[Socket] URL source:', source, '| Original:', import.meta.env.VITE_SOCKET_URL || localStorage.getItem('socket_server_url') || 'default', '| Final URL:', url);
   }
   
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'socket.js:45',message:'getSocketUrl result',data:{originalUrl:url,normalizedUrl,hasProtocol:normalizedUrl.startsWith('http://')||normalizedUrl.startsWith('https://'),envVar:import.meta.env.VITE_SOCKET_URL,source:window.__SOCKET_URL__?'window':import.meta.env.VITE_SOCKET_URL?'env':localStorage.getItem('socket_server_url')?'localStorage':'default'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7242/ingest/013e71cf-e84f-4094-bd24-302b5aea0ae3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'socket.js:50',message:'getSocketUrl result',data:{originalUrl:import.meta.env.VITE_SOCKET_URL||localStorage.getItem('socket_server_url')||'default',normalizedUrl:url,hasProtocol:url.startsWith('http://')||url.startsWith('https://'),envVar:import.meta.env.VITE_SOCKET_URL,source:window.__SOCKET_URL__?'window':import.meta.env.VITE_SOCKET_URL?'env':localStorage.getItem('socket_server_url')?'localStorage':'default'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
   // #endregion
-  return normalizedUrl;
+  return url;
 };
 
 let socket = null;
