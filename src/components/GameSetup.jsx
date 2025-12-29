@@ -37,7 +37,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
               setPlayMode('2player')
               setDifficulty(null) // Reset difficulty when switching modes
             }}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
               playMode === '2player'
                 ? 'glass-strong glow-mystical scale-105 text-white'
                 : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -47,7 +47,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
           </button>
           <button
             onClick={() => setPlayMode('computer')}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
               playMode === 'computer'
                 ? 'glass-strong glow-mystical scale-105 text-white'
                 : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -64,7 +64,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
                 setDifficulty(null) // Reset difficulty when switching modes
               }
             }}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
               playMode === 'online'
                 ? 'glass-strong glow-mystical scale-105 text-white'
                 : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -77,14 +77,14 @@ function GameSetup({ onStart, onOnlineSelect }) {
 
       {/* Difficulty Selection (only shown for VS Computer) */}
       {playMode === 'computer' && (
-        <div className="mb-6 animate-in fade-in duration-300">
+        <div className="mb-6 animate-in fade-in duration-500">
           <label className="block text-sm font-medium text-white/90 mb-3">
             Select Difficulty:
           </label>
           <div className="space-y-2">
             <button
               onClick={() => setDifficulty('easy')}
-              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
                 difficulty === 'easy'
                   ? 'glass-strong glow-mystical scale-105 text-white'
                   : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -94,7 +94,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
             </button>
             <button
               onClick={() => setDifficulty('hard')}
-              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
                 difficulty === 'hard'
                   ? 'glass-strong glow-mystical scale-105 text-white'
                   : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -104,7 +104,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
             </button>
             <button
               onClick={() => setDifficulty('insane')}
-              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
                 difficulty === 'insane'
                   ? 'glass-strong glow-mystical scale-105 text-white'
                   : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -163,7 +163,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setStartingPlayer('X')}
-            className={`px-4 py-4 rounded-lg glass transition-all duration-200 flex items-center justify-center min-h-[44px] ${
+            className={`px-4 py-4 rounded-lg glass transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] ${
               startingPlayer === 'X'
                 ? 'glass-strong glow-red scale-105'
                 : 'hover:glass-strong hover:scale-[1.02]'
@@ -173,7 +173,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
           </button>
           <button
             onClick={() => setStartingPlayer('O')}
-            className={`px-4 py-4 rounded-lg glass transition-all duration-200 flex items-center justify-center min-h-[44px] ${
+            className={`px-4 py-4 rounded-lg glass transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] ${
               startingPlayer === 'O'
                 ? 'glass-strong glow-blue scale-105'
                 : 'hover:glass-strong hover:scale-[1.02]'
@@ -194,7 +194,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
             </h2>
             <button
               onClick={() => setShowHelp(!showHelp)}
-              className="text-mystical-blue hover:text-mystical-purple font-semibold text-sm flex items-center gap-1 transition-colors duration-200"
+              className="text-mystical-blue hover:text-mystical-purple font-semibold text-sm flex items-center gap-1 transition-colors duration-300 ease-in-out"
             >
               {showHelp ? (
                 <>
@@ -218,7 +218,7 @@ function GameSetup({ onStart, onOnlineSelect }) {
           </div>
           
           {showHelp && (
-            <div className="mt-4 space-y-4 text-sm text-white/80 glass-strong p-4 rounded-lg animate-in fade-in duration-300">
+            <div className="mt-4 space-y-4 text-sm text-white/80 glass-strong p-4 rounded-lg animate-in fade-in duration-500">
               <section>
                 <h3 className="font-bold text-white mb-2 text-base">🎯 Unique Features</h3>
                 <ul className="space-y-2 list-disc list-inside text-white/80">

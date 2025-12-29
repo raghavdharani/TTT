@@ -463,7 +463,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               setRoomId('');
               setError(null);
             }}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
               mode === 'create'
                 ? 'glass-strong glow-mystical scale-105 text-white'
                 : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -476,7 +476,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               setMode('join');
               setError(null);
             }}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
               mode === 'join'
                 ? 'glass-strong glow-mystical scale-105 text-white'
                 : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
@@ -497,7 +497,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
             <div className="space-y-2">
               <button
                 onClick={() => setGameMode(1)}
-                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
                   gameMode === 1
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -507,7 +507,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               </button>
               <button
                 onClick={() => setGameMode(3)}
-                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
                   gameMode === 3
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -517,7 +517,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               </button>
               <button
                 onClick={() => setGameMode(5)}
-                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
+                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
                   gameMode === 5
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -536,7 +536,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setStartingPlayer('X')}
-                className={`px-4 py-4 rounded-lg glass transition-all duration-200 flex items-center justify-center min-h-[44px] ${
+                className={`px-4 py-4 rounded-lg glass transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] ${
                   startingPlayer === 'X'
                 ? 'glass-strong glow-blue scale-105'
                 : 'hover:glass-strong hover:scale-[1.02]'
@@ -546,7 +546,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               </button>
               <button
                 onClick={() => setStartingPlayer('O')}
-                className={`px-4 py-4 rounded-lg glass transition-all duration-200 flex items-center justify-center min-h-[44px] ${
+                className={`px-4 py-4 rounded-lg glass transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] ${
                   startingPlayer === 'O'
                 ? 'glass-strong glow-red scale-105'
                 : 'hover:glass-strong hover:scale-[1.02]'

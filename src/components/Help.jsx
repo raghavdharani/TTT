@@ -3,14 +3,14 @@ function Help({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-500"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="help-title"
     >
       <div
-        className="glass-strong rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in duration-300"
+        className="glass-strong rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in duration-500"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 sm:p-8">
@@ -23,7 +23,7 @@ function Help({ isOpen, onClose }) {
             </h2>
             <button
               onClick={onClose}
-              className="text-white/80 hover:text-white text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full glass hover:glass-strong transition-all duration-200 hover:scale-110"
+              className="text-white/80 hover:text-white text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full glass hover:glass-strong transition-all duration-300 ease-in-out hover:scale-110"
               aria-label="Close help"
             >
               ×

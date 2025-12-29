@@ -12,7 +12,7 @@
   }
   
   * {
-    @apply transition-colors duration-200;
+    @apply transition-colors duration-300;
   }
 }
 
@@ -48,7 +48,7 @@
   /* Button styles */
   .btn-mystical {
     @apply glass rounded-lg px-6 py-3 font-medium text-white;
-    @apply hover:scale-[1.02] active:scale-[0.98] transition-all duration-200;
+    @apply hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-in-out;
     @apply glow-mystical hover:glow-mystical-strong;
     min-height: 44px;
     min-width: 44px;

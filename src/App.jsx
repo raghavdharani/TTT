@@ -633,7 +633,7 @@ function App() {
           </h1>
           <button
             onClick={() => setShowHelp(true)}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full glass hover:glass-strong text-white font-bold text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 hover:scale-105"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full glass hover:glass-strong text-white font-bold text-xl sm:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out hover:scale-105"
             aria-label="Show help and rules"
           >
             ?
