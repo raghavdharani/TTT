@@ -9,14 +9,13 @@ function Square({ value, onClick, disabled, index }) {
     <button
       className={`
         w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28
-        border-2 border-gray-300
-        bg-white
-        hover:bg-gray-50
-        disabled:opacity-60 disabled:cursor-not-allowed
-        disabled:hover:bg-white
+        glass rounded-xl
         flex items-center justify-center
-        transition-colors duration-150
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        transition-all duration-200
+        disabled:opacity-40 disabled:cursor-not-allowed
+        disabled:hover:scale-100 disabled:hover:glass
+        ${!disabled ? 'hover:glass-strong hover:scale-105 cursor-pointer' : ''}
+        focus:outline-none focus:ring-2 focus:ring-mystical-blue focus:ring-offset-2
       `}
       disabled={disabled}
       onClick={onClick}

@@ -318,26 +318,26 @@ function OnlineGameSetup({ onStart, onCancel }) {
   // Conditional return AFTER all hooks have been called
   if (waitingForPlayer && roomCreated) {
     return (
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+      <div className="w-full max-w-2xl card-glass p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-white mb-4 text-center text-shadow-glow">
           Waiting for Player...
         </h2>
         <div className="text-center mb-6">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-lg font-semibold text-gray-700 mb-2">Room ID:</p>
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-4">
-            <p className="text-4xl font-bold text-blue-600 font-mono tracking-wider">{roomId}</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-mystical-blue mb-4 glow-mystical"></div>
+          <p className="text-lg font-semibold text-white/90 mb-2">Room ID:</p>
+          <div className="glass-strong rounded-lg p-4 mb-4 glow-mystical">
+            <p className="text-4xl font-bold text-mystical-blue font-mono tracking-wider">{roomId}</p>
           </div>
-          <p className="text-sm text-gray-600 mb-2">
+          <p className="text-sm text-white/80 mb-2">
             Share this room ID with your friend to play together!
           </p>
-          <p className="text-xs text-gray-500">
-            Your symbol: <span className="font-bold text-lg">{playerSymbol}</span>
+          <p className="text-xs text-white/70">
+            Your symbol: <span className="font-bold text-lg text-white">{playerSymbol}</span>
           </p>
         </div>
         <button
           onClick={onCancel}
-          className="w-full px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+          className="w-full btn-mystical min-h-[44px]"
         >
           Cancel
         </button>
@@ -346,8 +346,8 @@ function OnlineGameSetup({ onStart, onCancel }) {
   }
 
   return (
-    <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+    <div className="w-full max-w-2xl card-glass p-6 sm:p-8">
+      <h2 className="text-2xl font-bold text-white mb-6 text-center text-shadow-glow">
         Online Multiplayer
       </h2>
 
@@ -356,13 +356,13 @@ function OnlineGameSetup({ onStart, onCancel }) {
         <div className="mb-4">
           <button
             onClick={() => setShowServerConfig(!showServerConfig)}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
+            className="text-sm text-mystical-blue hover:text-mystical-purple underline"
           >
             {showServerConfig ? 'Hide' : 'Configure'} Server URL
           </button>
         {showServerConfig && (
-          <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="mt-2 p-3 glass rounded-lg">
+            <label className="block text-sm font-medium text-white/90 mb-2">
               Server URL:
             </label>
             <input
@@ -413,9 +413,9 @@ function OnlineGameSetup({ onStart, onCancel }) {
                 }
               }}
               placeholder="http://localhost:3001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="input-glass w-full text-sm"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-white/70 mt-2">
               For remote play, use the host's IP address (e.g., http://192.168.1.100:3001)
             </p>
           </div>
@@ -424,10 +424,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
       )}
 
       {/* Connection Status */}
-      <div className={`mb-4 p-3 rounded-lg text-sm text-center ${
+      <div className={`mb-4 p-3 rounded-lg text-sm text-center glass ${
         isConnected 
-          ? 'bg-green-50 border border-green-200 text-green-700' 
-          : 'bg-red-50 border border-red-200 text-red-700'
+          ? 'glow-mystical text-white' 
+          : 'text-white/80'
       }`}>
         {isConnected ? (
           <span>✓ Connected to server</span>
@@ -453,7 +453,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
 
       {/* Mode Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
+        <label className="block text-sm font-medium text-white/90 mb-3">
           Create or Join Room:
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -463,10 +463,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
               setRoomId('');
               setError(null);
             }}
-            className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
               mode === 'create'
-                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                ? 'glass-strong glow-mystical scale-105 text-white'
+                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
             }`}
           >
             Create Room
@@ -476,10 +476,10 @@ function OnlineGameSetup({ onStart, onCancel }) {
               setMode('join');
               setError(null);
             }}
-            className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+            className={`px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
               mode === 'join'
-                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                ? 'glass-strong glow-mystical scale-105 text-white'
+                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
             }`}
           >
             Join Room
@@ -491,13 +491,13 @@ function OnlineGameSetup({ onStart, onCancel }) {
       {mode === 'create' && (
         <>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-white/90 mb-3">
               Select Game Mode:
             </label>
             <div className="space-y-2">
               <button
                 onClick={() => setGameMode(1)}
-                className={`w-full px-4 py-3 rounded-lg border-2 transition-colors ${
+                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
                   gameMode === 1
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -507,7 +507,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               </button>
               <button
                 onClick={() => setGameMode(3)}
-                className={`w-full px-4 py-3 rounded-lg border-2 transition-colors ${
+                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
                   gameMode === 3
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -517,7 +517,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
               </button>
               <button
                 onClick={() => setGameMode(5)}
-                className={`w-full px-4 py-3 rounded-lg border-2 transition-colors ${
+                className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
                   gameMode === 5
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -530,26 +530,26 @@ function OnlineGameSetup({ onStart, onCancel }) {
 
           {/* Starting Player Selection (for create) */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-white/90 mb-3">
               Who goes first?
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setStartingPlayer('X')}
-                className={`px-4 py-4 rounded-lg border-2 transition-all flex items-center justify-center ${
+                className={`px-4 py-4 rounded-lg glass transition-all duration-200 flex items-center justify-center min-h-[44px] ${
                   startingPlayer === 'X'
-                    ? 'border-blue-500 bg-blue-50 shadow-md scale-105'
-                    : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
+                ? 'glass-strong glow-blue scale-105'
+                : 'hover:glass-strong hover:scale-[1.02]'
                 }`}
               >
                 <span className="text-2xl font-bold text-blue-600">X</span>
               </button>
               <button
                 onClick={() => setStartingPlayer('O')}
-                className={`px-4 py-4 rounded-lg border-2 transition-all flex items-center justify-center ${
+                className={`px-4 py-4 rounded-lg glass transition-all duration-200 flex items-center justify-center min-h-[44px] ${
                   startingPlayer === 'O'
-                    ? 'border-red-500 bg-red-50 shadow-md scale-105'
-                    : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
+                ? 'glass-strong glow-red scale-105'
+                : 'hover:glass-strong hover:scale-[1.02]'
                 }`}
               >
                 <span className="text-2xl font-bold text-red-600">O</span>
@@ -562,7 +562,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
       {/* Room ID Input (for join) */}
       {mode === 'join' && (
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-white/90 mb-3">
             Enter Room ID:
           </label>
           <input
@@ -570,7 +570,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
             value={roomId}
             onChange={(e) => setRoomId(e.target.value.toUpperCase())}
             placeholder="ABC123"
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center text-2xl font-mono uppercase focus:border-blue-500 focus:outline-none"
+            className="input-glass w-full text-center text-2xl font-mono uppercase"
             maxLength={6}
           />
         </div>
@@ -578,7 +578,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mb-4 p-3 glass rounded-lg text-white/90 text-sm">
           {error}
         </div>
       )}
@@ -587,7 +587,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
       <div className="flex gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+          className="flex-1 btn-mystical min-h-[44px]"
         >
           Cancel
         </button>
@@ -595,7 +595,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
           <button
             onClick={handleCreateRoom}
             disabled={!gameMode || !startingPlayer || isConnecting}
-            className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:glow-mystical min-h-[44px]"
           >
             {isConnecting ? 'Creating...' : 'Create Room'}
           </button>
@@ -604,7 +604,7 @@ function OnlineGameSetup({ onStart, onCancel }) {
           <button
             onClick={handleJoinRoom}
             disabled={!roomId.trim() || isConnecting}
-            className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:glow-mystical min-h-[44px]"
           >
             {isConnecting ? 'Joining...' : 'Join Room'}
           </button>

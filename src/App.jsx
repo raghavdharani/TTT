@@ -602,7 +602,7 @@ function App() {
 
   if (showSetup) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
         {playMode === 'online' ? (
           <OnlineGameSetup 
             onStart={handleGameStart} 
@@ -625,15 +625,15 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="flex items-center justify-between w-full mb-6 sm:mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white text-shadow-glow">
             ShiftTacToe
           </h1>
           <button
             onClick={() => setShowHelp(true)}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xl sm:text-2xl flex items-center justify-center transition-colors duration-150"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full glass hover:glass-strong text-white font-bold text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 hover:scale-105"
             aria-label="Show help and rules"
           >
             ?

@@ -139,7 +139,7 @@ function GameStatus({
     <div className="mb-4 sm:mb-6">
       {seriesInfo && (
         <div
-          className="text-base sm:text-lg font-semibold text-blue-600 mb-2 text-center"
+          className="text-base sm:text-lg font-semibold text-mystical-blue mb-2 text-center text-shadow-glow"
           role="status"
           aria-live="polite"
         >
@@ -147,7 +147,7 @@ function GameStatus({
         </div>
       )}
       <div
-        className="text-lg sm:text-xl font-medium text-gray-800 text-center"
+        className="text-lg sm:text-xl font-medium text-white text-center text-shadow"
         role="status"
         aria-live="polite"
         aria-atomic="true"

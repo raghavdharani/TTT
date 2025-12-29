@@ -51,20 +51,26 @@ function Board({
 
   return (
     <div
-      className="grid grid-cols-3 gap-2 w-full max-w-xs sm:max-w-sm md:max-w-md"
+      className="grid grid-cols-3 gap-3 w-full max-w-xs sm:max-w-sm md:max-w-md"
       role="grid"
       aria-label="ShiftTacToe game board"
     >
       {squares.map((value, index) => {
         const enabled = isSquareEnabled(value, index)
+        const isRelocatingSquare = tokenToMoveIndex === index
+        const isRelocating = tokenToMoveIndex !== null
         return (
-          <Square
-            key={index}
-            value={value}
-            onClick={() => enabled && onSquareClick(index)}
-            disabled={!enabled}
-            index={index}
-          />
+          <div key={index} className="relative">
+            {isRelocatingSquare && (
+              <div className="absolute inset-0 rounded-xl glow-mystical animate-pulse-slow pointer-events-none" />
+            )}
+            <Square
+              value={value}
+              onClick={() => enabled && onSquareClick(index)}
+              disabled={!enabled}
+              index={index}
+            />
+          </div>
         )
       })}
     </div>

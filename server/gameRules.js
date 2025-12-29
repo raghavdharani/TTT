@@ -234,3 +234,4 @@ export const validateAndApplyMove = (squares, moveType, player, fromIndex, toInd
   };
 };
 
+
