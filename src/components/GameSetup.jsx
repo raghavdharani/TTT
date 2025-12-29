@@ -1,268 +1,199 @@
-import { useState } from 'react'
-import { Token } from './tokens'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings, Info, Play, User, Monitor, Trophy } from 'lucide-react';
+import GlassCard from './ui/GlassCard';
+import MysticalButton from './ui/MysticalButton';
+import Token from './ui/Token';
 
-function GameSetup({ onStart, onOnlineSelect }) {
-  const [playMode, setPlayMode] = useState(null) // '2player' or 'computer'
-  const [difficulty, setDifficulty] = useState(null) // 'easy', 'hard', 'insane' (only for computer mode)
-  const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
-  const [startingPlayer, setStartingPlayer] = useState(null) // 'X' or 'O'
-  const [showHelp, setShowHelp] = useState(false)
+function GameSetup({ onStart }) {
+  const [playMode, setPlayMode] = useState(null);
+  const [difficulty, setDifficulty] = useState(null);
+  const [gameMode, setGameMode] = useState(null);
+  const [startingPlayer, setStartingPlayer] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleStart = () => {
-    if (playMode && gameMode && startingPlayer) {
-      if (playMode === 'computer' && !difficulty) {
-        return // Can't start without difficulty for computer mode
-      }
-      onStart(playMode, gameMode, startingPlayer, difficulty)
+    if (playMode === 'online') {
+      onStart('online');
+      return;
     }
-  }
+    if (playMode && gameMode && startingPlayer) {
+      if (playMode === 'computer' && !difficulty) return;
+      onStart(playMode, gameMode, startingPlayer, difficulty);
+    }
+  };
+
+  const isOnline = playMode === 'online';
 
   return (
-    <div className="w-full max-w-2xl card-glass p-6 sm:p-8">
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 text-center text-shadow-glow">
-        ShiftTacToe
-      </h1>
-      <p className="text-sm sm:text-base text-white/80 mb-6 text-center">
-        Move tokens, play series, and outsmart your opponent!
-      </p>
-
-      {/* Play Mode Selection (2 Player vs VS Computer vs Online) */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-white/90 mb-3">
-          Select Play Mode:
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            onClick={() => {
-              setPlayMode('2player')
-              setDifficulty(null) // Reset difficulty when switching modes
-            }}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
-              playMode === '2player'
-                ? 'glass-strong glow-mystical scale-105 text-white'
-                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            2 Player
-          </button>
-          <button
-            onClick={() => setPlayMode('computer')}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
-              playMode === 'computer'
-                ? 'glass-strong glow-mystical scale-105 text-white'
-                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            VS Computer
-          </button>
-          <button
-            onClick={() => {
-              if (onOnlineSelect) {
-                onOnlineSelect()
-              } else {
-                setPlayMode('online')
-                setDifficulty(null) // Reset difficulty when switching modes
-              }
-            }}
-            className={`px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
-              playMode === 'online'
-                ? 'glass-strong glow-mystical scale-105 text-white'
-                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            Online
-          </button>
-        </div>
+    <GlassCard className="w-full max-w-md p-6 sm:p-8 flex flex-col gap-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-purple-300 to-white drop-shadow-glow">
+          ShiftTacToe
+        </h1>
+        <p className="text-blue-200/80 font-light tracking-wide">
+          A strategic twist on a classic
+        </p>
       </div>
 
-      {/* Difficulty Selection (only shown for VS Computer) */}
-      {playMode === 'computer' && (
-        <div className="mb-6 animate-in fade-in duration-500">
-          <label className="block text-sm font-medium text-white/90 mb-3">
-            Select Difficulty:
+      <div className="space-y-6">
+        {/* Play Mode */}
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-blue-200 uppercase tracking-widest opacity-80 pl-1">
+            Opponent
           </label>
-          <div className="space-y-2">
-            <button
-              onClick={() => setDifficulty('easy')}
-              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
-                difficulty === 'easy'
-                  ? 'glass-strong glow-mystical scale-105 text-white'
-                  : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-              }`}
+          <div className="grid grid-cols-3 gap-3">
+            <MysticalButton
+              variant={playMode === '2player' ? 'primary' : 'secondary'}
+              onClick={() => { setPlayMode('2player'); setDifficulty(null); }}
+              className="py-4 flex-col gap-1 text-xs sm:text-sm"
             >
-              Easy
-            </button>
-            <button
-              onClick={() => setDifficulty('hard')}
-              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
-                difficulty === 'hard'
-                  ? 'glass-strong glow-mystical scale-105 text-white'
-                  : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-              }`}
+              <User size={18} />
+              <span>Human</span>
+            </MysticalButton>
+            <MysticalButton
+              variant={playMode === 'computer' ? 'primary' : 'secondary'}
+              onClick={() => setPlayMode('computer')}
+              className="py-4 flex-col gap-1 text-xs sm:text-sm"
             >
-              Hard
-            </button>
-            <button
-              onClick={() => setDifficulty('insane')}
-              className={`w-full px-4 py-3 rounded-lg glass transition-all duration-300 ease-in-out min-h-[44px] ${
-                difficulty === 'insane'
-                  ? 'glass-strong glow-mystical scale-105 text-white'
-                  : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-              }`}
+              <Monitor size={18} />
+              <span>Computer</span>
+            </MysticalButton>
+            <MysticalButton
+              variant={playMode === 'online' ? 'primary' : 'secondary'}
+              onClick={() => { setPlayMode('online'); setDifficulty(null); }}
+              className="py-4 flex-col gap-1 text-xs sm:text-sm"
             >
-              Insane
-            </button>
+              <Trophy size={18} />
+              <span>Online</span>
+            </MysticalButton>
           </div>
         </div>
-      )}
 
-      {/* Game Mode Selection */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-white/90 mb-3">
-          Select Game Mode:
-        </label>
-        <div className="space-y-2">
-          <button
-            onClick={() => setGameMode(1)}
-            className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
-              gameMode === 1
-                ? 'glass-strong glow-mystical scale-105 text-white'
-                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            1 Game
-          </button>
-          <button
-            onClick={() => setGameMode(3)}
-            className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
-              gameMode === 3
-                ? 'glass-strong glow-mystical scale-105 text-white'
-                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            Best of 3
-          </button>
-          <button
-            onClick={() => setGameMode(5)}
-            className={`w-full px-4 py-3 rounded-lg glass transition-all duration-200 min-h-[44px] ${
-              gameMode === 5
-                ? 'glass-strong glow-mystical scale-105 text-white'
-                : 'text-white/80 hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            Best of 5
-          </button>
-        </div>
-      </div>
-
-      {/* Starting Player Selection */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-white/90 mb-3">
-          Who goes first?
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setStartingPlayer('X')}
-            className={`px-4 py-4 rounded-lg glass transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] ${
-              startingPlayer === 'X'
-                ? 'glass-strong glow-red scale-105'
-                : 'hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            <Token value="X" size="small" />
-          </button>
-          <button
-            onClick={() => setStartingPlayer('O')}
-            className={`px-4 py-4 rounded-lg glass transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] ${
-              startingPlayer === 'O'
-                ? 'glass-strong glow-blue scale-105'
-                : 'hover:glass-strong hover:scale-[1.02]'
-            }`}
-          >
-            <Token value="O" size="small" />
-          </button>
-        </div>
-      </div>
-
-      {/* Help Section - Always Visible and Prominent */}
-      <div className="mb-6 border-t border-white/20 pt-6">
-        <div className="glass rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-2xl">📖</span>
-              How This Game Works
-            </h2>
-            <button
-              onClick={() => setShowHelp(!showHelp)}
-              className="text-mystical-blue hover:text-mystical-purple font-semibold text-sm flex items-center gap-1 transition-colors duration-300 ease-in-out"
+        {/* Local Game Settings (Hidden for Online) */}
+        <AnimatePresence>
+          {!isOnline && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="space-y-6 overflow-hidden"
             >
-              {showHelp ? (
-                <>
-                  <span>Show Less</span>
-                  <span className="text-lg">−</span>
-                </>
-              ) : (
-                <>
-                  <span>Show More</span>
-                  <span className="text-lg">+</span>
-                </>
+              {/* Difficulty (Conditional) */}
+              {playMode === 'computer' && (
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-blue-200 uppercase tracking-widest opacity-80 pl-1">
+                    Difficulty
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['easy', 'hard', 'insane'].map((level) => (
+                      <MysticalButton
+                        key={level}
+                        variant={difficulty === level ? 'primary' : 'secondary'}
+                        onClick={() => setDifficulty(level)}
+                        className="capitalize py-3 text-sm"
+                      >
+                        {level}
+                      </MysticalButton>
+                    ))}
+                  </div>
+                </div>
               )}
-            </button>
-          </div>
-          
-          {/* Always visible summary */}
-          <div className="mb-3">
-            <p className="text-sm font-medium text-white/90 mb-2">
-              <strong>Quick Start:</strong> Place tokens (max 3), move them to adjacent squares, and get three in a row to win!
-            </p>
-          </div>
-          
-          {showHelp && (
-            <div className="mt-4 space-y-4 text-sm text-white/80 glass-strong p-4 rounded-lg animate-in fade-in duration-500">
-              <section>
-                <h3 className="font-bold text-white mb-2 text-base">🎯 Unique Features</h3>
-                <ul className="space-y-2 list-disc list-inside text-white/80">
-                  <li><strong>Token Limit:</strong> Maximum 3 tokens per player - relocate to place new ones</li>
-                  <li><strong>Token Movement:</strong> Move tokens to adjacent squares (up, down, left, right only)</li>
-                  <li><strong>Series Mode:</strong> Play best of 1, 3, or 5 games</li>
-                  <li><strong>Alternating Start:</strong> Starting player alternates each game in a series</li>
-                </ul>
-              </section>
-              
-              <section>
-                <h3 className="font-bold text-white mb-2 text-base">🎮 How to Play</h3>
-                <ol className="space-y-2 list-decimal list-inside text-white/80">
-                  <li>Place tokens on empty squares until you reach 3 tokens</li>
-                  <li>Click your token to pick it up, then click an adjacent empty square to move it</li>
-                  <li>If you place a token back in the same spot, your turn doesn't end</li>
-                  <li>Win by getting three in a row (horizontal, vertical, or diagonal)</li>
-                </ol>
-              </section>
 
-              <section>
-                <h3 className="font-bold text-white mb-2 text-base">💡 Pro Tips</h3>
-                <ul className="space-y-2 list-disc list-inside text-white/80">
-                  <li>Plan ahead - blocked tokens can't move</li>
-                  <li>Use relocation to create multiple winning opportunities</li>
-                  <li>Block your opponent while setting up your own win</li>
-                </ul>
-              </section>
-            </div>
+              {/* Game Mode */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-blue-200 uppercase tracking-widest opacity-80 pl-1">
+                  Series Length
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 3, 5].map((mode) => (
+                    <MysticalButton
+                      key={mode}
+                      variant={gameMode === mode ? 'primary' : 'secondary'}
+                      onClick={() => setGameMode(mode)}
+                      className="py-3 text-sm flex-col gap-0 leading-tight"
+                    >
+                      <span className="font-bold text-lg">{mode}</span>
+                      <span className="opacity-80 text-xs">{mode === 1 ? 'Game' : 'Best of'}</span>
+                    </MysticalButton>
+                  ))}
+                </div>
+              </div>
+
+              {/* Starting Player */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-blue-200 uppercase tracking-widest opacity-80 pl-1">
+                  First Move
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setStartingPlayer('X')}
+                    className={`relative h-20 rounded-xl border transition-all flex items-center justify-center overflow-hidden group ${startingPlayer === 'X'
+                      ? 'bg-navy-700/80 border-primary-glow/50 shadow-glow-sm'
+                      : 'bg-navy-800/40 border-white/5 hover:bg-navy-700/40'
+                      }`}
+                  >
+                    <Token type="X" size="md" />
+                    {startingPlayer === 'X' && <div className="absolute inset-0 bg-primary-glow/10 animate-pulse" />}
+                  </button>
+                  <button
+                    onClick={() => setStartingPlayer('O')}
+                    className={`relative h-20 rounded-xl border transition-all flex items-center justify-center overflow-hidden group ${startingPlayer === 'O'
+                      ? 'bg-navy-700/80 border-primary-glow/50 shadow-glow-sm'
+                      : 'bg-navy-800/40 border-white/5 hover:bg-navy-700/40'
+                      }`}
+                  >
+                    <Token type="O" size="md" />
+                    {startingPlayer === 'O' && <div className="absolute inset-0 bg-blue-500/10 animate-pulse" />}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-      </div>
+        </AnimatePresence>
 
-      {/* Start Button */}
-      <button
-        onClick={handleStart}
-        disabled={!playMode || !gameMode || !startingPlayer || (playMode === 'computer' && !difficulty)}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:glow-mystical min-h-[44px]"
-      >
-        Start Game
-      </button>
-    </div>
-  )
+        {/* Rules Toggle */}
+        <div className="pt-2">
+          <button
+            onClick={() => setShowHelp(!showHelp)}
+            className="w-full flex items-center justify-between text-blue-300/60 hover:text-blue-200 text-sm transition-colors py-2"
+          >
+            <span className="flex items-center gap-2">
+              <Info size={16} /> How to play
+            </span>
+            <span className="text-lg">{showHelp ? '−' : '+'}</span>
+          </button>
+
+          <AnimatePresence>
+            {showHelp && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 p-4 rounded-lg bg-navy-900/50 border border-white/5 text-sm text-blue-100/70 space-y-2">
+                  <p>• <strong>Limit:</strong> Only 3 tokens per player.</p>
+                  <p>• <strong>Move:</strong> Relocate tokens to adjacent spots once you place all 3.</p>
+                  <p>• <strong>Win:</strong> Get 3 in a row.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Start Action */}
+        <MysticalButton
+          variant="primary"
+          onClick={handleStart}
+          disabled={!playMode || (!isOnline && (!gameMode || !startingPlayer)) || (playMode === 'computer' && !difficulty)}
+          className="w-full py-4 text-lg font-bold shadow-glow-md disabled:opacity-50 disabled:shadow-none"
+        >
+          {isOnline ? 'Go to Online Setup' : 'Start Game'}
+        </MysticalButton>
+      </div>
+    </GlassCard>
+  );
 }
 
-export default GameSetup
-
+export default GameSetup;

@@ -1,4 +1,4 @@
-import { Token } from './tokens'
+import GlassCard from './ui/GlassCard';
 
 function GameStatus({
   currentPlayer,
@@ -16,147 +16,78 @@ function GameStatus({
   isComputerTurn,
   isComputerThinking,
 }) {
-  const getSeriesInfo = () => {
-    if (!gameMode || gameMode === 1) {
-      return null
-    }
-    
+  const getStatusContent = () => {
     if (seriesWinner) {
-      if (seriesWinner === 'X') {
-        return (
-          <span className="flex items-center justify-center gap-2">
-            <span>Series Winner: Player</span>
-            <Token value="X" size="small" />
-            <span>wins {xWins}-{oWins}!</span>
-          </span>
-        )
-      }
-      if (seriesWinner === 'O') {
-        return (
-          <span className="flex items-center justify-center gap-2">
-            <span>Series Winner: Player</span>
-            <Token value="O" size="small" />
-            <span>wins {oWins}-{xWins}!</span>
-          </span>
-        )
-      }
-      return `Series Draw: ${xWins}-${oWins}`
+      return {
+        title: seriesWinner === 'draw' ? 'Series Draw!' : `Player ${seriesWinner} Wins Series!`,
+        subtitle: `Final Score: X ${xWins} - ${oWins} O`,
+        color: 'text-primary-glow'
+      };
     }
-    
-    const modeText = gameMode === 3 ? 'Best of 3' : 'Best of 5'
-    return (
-      <span className="flex items-center justify-center gap-2">
-        <span>{modeText} - Game {currentGame}:</span>
-        <Token value="X" size="small" />
-        <span>{xWins}</span>
-        <span>|</span>
-        <Token value="O" size="small" />
-        <span>{oWins}</span>
-      </span>
-    )
-  }
 
-  const getStatusMessage = () => {
-    if (seriesWinner) {
-      if (seriesWinner === 'X') {
-        return (
-          <span className="flex items-center justify-center gap-2">
-            <span>Player</span>
-            <Token value="X" size="small" />
-            <span>Wins the Series!</span>
-          </span>
-        )
-      }
-      if (seriesWinner === 'O') {
-        return (
-          <span className="flex items-center justify-center gap-2">
-            <span>Player</span>
-            <Token value="O" size="small" />
-            <span>Wins the Series!</span>
-          </span>
-        )
-      }
-      return "Series Draw!"
+    if (gameOver) {
+      if (winner === 'draw') return { title: "It's a Draw!", subtitle: "No moves left", color: 'text-white/80' };
+      return {
+        title: `Player ${winner} Wins!`,
+        subtitle: "Click New Game to play again",
+        color: winner === 'X' ? 'text-token-x' : 'text-token-o'
+      };
     }
-    
-    if (gameOver && winner === 'X') {
-      return (
-        <span className="flex items-center justify-center gap-2">
-          <span>Player</span>
-          <Token value="X" size="small" />
-          <span>Wins This Game!</span>
-        </span>
-      )
-    }
-    if (gameOver && winner === 'O') {
-      return (
-        <span className="flex items-center justify-center gap-2">
-          <span>Player</span>
-          <Token value="O" size="small" />
-          <span>Wins This Game!</span>
-        </span>
-      )
-    }
-    if (gameOver && winner === 'draw') {
-      return "It's a Draw!"
-    }
+
     if (isComputerTurn) {
-      if (isComputerThinking) {
-        return 'Computer is thinking...'
-      }
-      return "Computer's turn..."
+      return {
+        title: "Computer's Turn",
+        subtitle: isComputerThinking ? "Thinking strategy..." : "Acting...",
+        color: "text-blue-300"
+      };
     }
-    if (isRelocating) {
-      return (
-        <span className="flex items-center justify-center gap-2">
-          <span>Player</span>
-          <Token value={currentPlayer} size="small" />
-          <span>is moving a token. Choose a new square.</span>
-        </span>
-      )
-    }
-    if (!canPlaceNewToken) {
-      return (
-        <span className="flex items-center justify-center gap-2">
-          <span>Player</span>
-          <Token value={currentPlayer} size="small" />
-          <span>has {currentPlayerTokenCount}/{tokenLimit} tokens. Click a token to relocate it.</span>
-        </span>
-      )
-    }
-    return (
-      <span className="flex items-center justify-center gap-2">
-        <span>Current Player:</span>
-        <Token value={currentPlayer} size="small" />
-        <span>({currentPlayerTokenCount}/{tokenLimit} tokens)</span>
-      </span>
-    )
-  }
 
-  const seriesInfo = getSeriesInfo()
+    if (isRelocating) {
+      return {
+        title: "Relocation Phase",
+        subtitle: "Select a new square for your token",
+        color: "text-primary-accent"
+      };
+    }
+
+    if (!canPlaceNewToken) {
+      return {
+        title: "Token Limit Reached",
+        subtitle: "Select one of your tokens to move it",
+        color: "text-status-attention"
+      };
+    }
+
+    return {
+      title: `Player ${currentPlayer}'s Turn`,
+      subtitle: `Place token (${currentPlayerTokenCount + 1}/${tokenLimit})`,
+      color: currentPlayer === 'X' ? 'text-token-x' : 'text-token-o'
+    };
+  };
+
+  const content = getStatusContent();
 
   return (
-    <div className="mb-4 sm:mb-6">
-      {seriesInfo && (
-        <div
-          className="text-base sm:text-lg font-semibold text-mystical-blue mb-2 text-center text-shadow-glow"
-          role="status"
-          aria-live="polite"
-        >
-          {seriesInfo}
+    <GlassCard className="mb-6 px-6 py-4 w-full text-center flex flex-col items-center justify-center min-h-[100px]">
+
+      {/* Series Score (Small Top) */}
+      {gameMode > 1 && (
+        <div className="text-xs uppercase tracking-widest text-blue-200/50 mb-1">
+          {seriesWinner ? 'Series Completed' : `Game ${currentGame} of ${gameMode} • Score: ${xWins}-${oWins}`}
         </div>
       )}
-      <div
-        className="text-lg sm:text-xl font-medium text-white text-center text-shadow"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {getStatusMessage()}
+
+      {/* Main Status */}
+      <div className={`text-2xl sm:text-3xl font-bold mb-1 transition-colors duration-300 drop-shadow-sm ${content.color}`}>
+        {content.title}
       </div>
-    </div>
-  )
+
+      {/* Subtitle / Instruction */}
+      <div className="text-sm text-blue-100/70 font-light">
+        {content.subtitle}
+      </div>
+    </GlassCard>
+  );
 }
 
-export default GameStatus
-
+export default GameStatus;

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,77 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-navy-200 text-white font-sans;
-    background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f142e 100%);
-    min-height: 100vh;
-  }
-  
-  * {
-    @apply transition-colors duration-300;
+    @apply bg-navy-900 text-white font-sans antialiased;
+    background-image: radial-gradient(circle at 50% 50%, #312e81 0%, #1e1b4b 100%);
   }
 }
-
-@layer components {
-  /* Glassmorphism utility */
-  .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  }
-  
-  .glass-strong {
-    @apply bg-white/15 backdrop-blur-lg border border-white/30;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.5);
-  }
-  
-  /* Mystical glow effects */
-  .glow-mystical {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.2);
-  }
-  
-  .glow-mystical-strong {
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.4);
-  }
-  
-  .glow-red {
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.5), 0 0 40px rgba(220, 38, 38, 0.3);
-  }
-  
-  .glow-blue {
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.5), 0 0 40px rgba(37, 99, 235, 0.3);
-  }
-  
-  /* Button styles */
-  .btn-mystical {
-    @apply glass rounded-lg px-6 py-3 font-medium text-white;
-    @apply hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-in-out;
-    @apply glow-mystical hover:glow-mystical-strong;
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .btn-primary {
-    @apply btn-mystical bg-gradient-to-r from-mystical-blue to-mystical-purple;
-  }
-  
-  /* Card styles */
-  .card-glass {
-    @apply glass rounded-xl p-6;
-  }
-  
-  /* Input styles */
-  .input-glass {
-    @apply glass rounded-lg px-4 py-3 text-white placeholder-white/60;
-    @apply focus:outline-none focus:ring-2 focus:ring-mystical-blue focus:glow-mystical;
-  }
-}
-
-@layer utilities {
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-  
-  .text-shadow-glow {
-    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5), 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-}
-

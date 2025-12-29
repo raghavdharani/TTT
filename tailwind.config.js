@@ -2,61 +2,47 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       colors: {
         navy: {
-          DEFAULT: '#0a0e27',
-          50: '#1a1f3a',
-          100: '#0f142e',
-          200: '#0a0e27',
-          300: '#05081f',
+          900: '#1e1b4b', // Indigo 950 - Softer, richer blue instead of pitch black
+          800: '#312e81', // Indigo 900 - Lighter for cards
+          700: '#4338ca', // Indigo 800
         },
-        purple: {
-          glow: '#6366f1',
-          soft: '#8b5cf6',
+        primary: {
+          glow: '#c084fc', // Purple 400 - Brighter glow
+          accent: '#818cf8', // Indigo 400
         },
-        mystical: {
-          blue: '#6366f1',
-          purple: '#8b5cf6',
-          glow: 'rgba(99, 102, 241, 0.3)',
+        token: {
+          x: '#f87171', // Red 400 - Brighter/Softer red
+          o: '#60a5fa', // Blue 400 - Brighter/Softer blue
         },
+        status: {
+          success: '#34d399', // Emerald 400
+          attention: '#fbbf24', // Amber 400
+          error: '#f87171', // Red 400
+        }
       },
       fontFamily: {
-        sans: ['Inter', 'Poppins', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
-        'glow-strong': 'glow-strong 1.5s ease-in-out infinite alternate',
-        'shimmer': 'shimmer 2s linear infinite',
-        'particle-float': 'particle-float 3s ease-out infinite',
+        'spin-slow': 'spin 3s linear infinite',
       },
-      keyframes: {
-        glow: {
-          '0%': { boxShadow: '0 0 5px rgba(99, 102, 241, 0.3), 0 0 10px rgba(99, 102, 241, 0.2)' },
-          '100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.3)' },
-        },
-        'glow-strong': {
-          '0%': { boxShadow: '0 0 10px rgba(99, 102, 241, 0.5), 0 0 20px rgba(99, 102, 241, 0.3)' },
-          '100%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.8), 0 0 50px rgba(99, 102, 241, 0.5)' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-1000px 0' },
-          '100%': { backgroundPosition: '1000px 0' },
-        },
-        'particle-float': {
-          '0%': { transform: 'translateY(0) translateX(0) scale(1)', opacity: '1' },
-          '100%': { transform: 'translateY(-100px) translateX(20px) scale(0)', opacity: '0' },
-        },
-      },
-      backdropBlur: {
-        xs: '2px',
-      },
+      boxShadow: {
+        'glow-sm': '0 0 10px rgba(168, 85, 247, 0.3)',
+        'glow-md': '0 0 20px rgba(168, 85, 247, 0.5)',
+        'glow-lg': '0 0 30px rgba(168, 85, 247, 0.7)',
+        'glow-x': '0 0 15px rgba(220, 38, 38, 0.6)',
+        'glow-o': '0 0 15px rgba(37, 99, 235, 0.6)',
+      }
     },
   },
   plugins: [],
 }
+
 

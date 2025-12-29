@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Board from './components/Board'
 import GameStatus from './components/GameStatus'
 import NewGameButton from './components/NewGameButton'
@@ -7,38 +8,51 @@ import GameSetup from './components/GameSetup'
 import OnlineGameSetup from './components/OnlineGameSetup'
 import { calculateWinner, checkDraw } from './utils/gameLogic'
 import { getComputerMove } from './utils/ai'
-import { getSocket, disconnectSocket } from './utils/socket'
-import {
-  TOKEN_LIMIT,
-  countTokens,
-  canTokenMove,
-  isAdjacent,
-  canPlaceNewToken,
-  canPickupToken,
-  canRelocateToken,
-  canCancelRelocate,
-  validateAndApplyMove,
-} from './utils/gameRules'
+
+const TOKEN_LIMIT = 3
+
+const countTokens = (squares, player) =>
+  squares.reduce((count, square) => (square === player ? count + 1 : count), 0)
+
+const getAdjacentIndices = (index) => {
+  const row = Math.floor(index / 3)
+  const col = index % 3
+  const adjacent = []
+  if (row > 0) adjacent.push((row - 1) * 3 + col)
+  if (row < 2) adjacent.push((row + 1) * 3 + col)
+  if (col > 0) adjacent.push(row * 3 + (col - 1))
+  if (col < 2) adjacent.push(row * 3 + (col + 1))
+  return adjacent
+}
+
+const canTokenMove = (squares, index) => {
+  const adjacentIndices = getAdjacentIndices(index)
+  return adjacentIndices.some((adjIndex) => squares[adjIndex] === null)
+}
+
+const isAdjacent = (sourceIndex, targetIndex) => {
+  return getAdjacentIndices(sourceIndex).includes(targetIndex)
+}
 
 function App() {
   // Game setup state
   const [showSetup, setShowSetup] = useState(true)
-  const [playMode, setPlayMode] = useState(null) // '2player', 'computer', or 'online'
-  const [difficulty, setDifficulty] = useState(null) // 'easy', 'hard', 'insane'
-  const [gameMode, setGameMode] = useState(null) // 1, 3, or 5
-  const [seriesStartingPlayer, setSeriesStartingPlayer] = useState(null) // 'X' or 'O'
-  
-  // Online multiplayer state
+  const [playMode, setPlayMode] = useState(null)
+  const [difficulty, setDifficulty] = useState(null)
+  const [gameMode, setGameMode] = useState(null)
+  const [seriesStartingPlayer, setSeriesStartingPlayer] = useState(null)
+
+  // Online State
   const [socket, setSocket] = useState(null)
+  const [onlinePlayerSymbol, setOnlinePlayerSymbol] = useState(null)
   const [roomId, setRoomId] = useState(null)
-  const [playerSymbol, setPlayerSymbol] = useState(null) // 'X' or 'O' for online mode
-  
+
   // Series state
   const [currentGame, setCurrentGame] = useState(1)
   const [xWins, setXWins] = useState(0)
   const [oWins, setOWins] = useState(0)
   const [seriesWinner, setSeriesWinner] = useState(null)
-  
+
   // Game state
   const [squares, setSquares] = useState(Array(9).fill(null))
   const [xIsNext, setXIsNext] = useState(true)
@@ -47,43 +61,71 @@ function App() {
   const [tokenToMoveIndex, setTokenToMoveIndex] = useState(null)
   const [showHelp, setShowHelp] = useState(false)
   const [isComputerThinking, setIsComputerThinking] = useState(false)
-  
-  // Use ref to always access latest squares in effects
-  const squaresRef = useRef(squares)
-  const moveTimerRef = useRef(null)
-  const isProcessingMoveRef = useRef(false)
-  useEffect(() => {
-    squaresRef.current = squares
-  }, [squares])
 
   const currentPlayer = xIsNext ? 'X' : 'O'
   const currentPlayerTokenCount = countTokens(squares, currentPlayer)
   const isRelocating = tokenToMoveIndex !== null
-  const canPlaceNewTokenResult = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
-  const canPlaceNewTokenValid = canPlaceNewTokenResult.valid
-  
-  // Determine if current player is computer
-  // In computer mode, the computer always plays as 'O'
+  const canPlaceNewToken = currentPlayerTokenCount < TOKEN_LIMIT
+
   const isComputerTurn = playMode === 'computer' && currentPlayer === 'O' && !gameOver
-  
-  // Determine if it's current player's turn in online mode
-  const isMyTurn = playMode !== 'online' || (playerSymbol === currentPlayer && !gameOver)
+  const isOnlineTurn = playMode === 'online' && currentPlayer === onlinePlayerSymbol && !gameOver
+
+  // Online Game Listeners
+  useEffect(() => {
+    if (playMode !== 'online' || !socket) return
+
+    const handleGameStateUpdated = ({ gameState }) => {
+      setSquares(gameState.squares)
+      setXIsNext(gameState.xIsNext)
+      setWinner(gameState.winner)
+      setGameOver(gameState.gameOver)
+      setTokenToMoveIndex(gameState.tokenToMoveIndex)
+      setXWins(gameState.xWins)
+      setOWins(gameState.oWins)
+      setSeriesWinner(gameState.seriesWinner)
+      setCurrentGame(gameState.currentGame)
+    }
+
+    const handleNewGameStarted = ({ gameState }) => {
+      setSquares(gameState.squares)
+      setXIsNext(gameState.xIsNext)
+      setWinner(gameState.winner)
+      setGameOver(gameState.gameOver)
+      setTokenToMoveIndex(gameState.tokenToMoveIndex)
+      // Keep wins/series info
+    }
+
+    const handleGameReset = ({ gameState }) => {
+      setSquares(gameState.squares)
+      setXIsNext(gameState.xIsNext)
+      setWinner(gameState.winner)
+      setGameOver(gameState.gameOver)
+      setTokenToMoveIndex(gameState.tokenToMoveIndex)
+    }
+
+    const handlePlayerLeft = () => {
+      alert('Opponent disconnected')
+      handleBackToSetup()
+    }
+
+    socket.on('game-state-updated', handleGameStateUpdated)
+    socket.on('new-game-started', handleNewGameStarted)
+    socket.on('game-reset', handleGameReset)
+    socket.on('player-left', handlePlayerLeft)
+
+    return () => {
+      socket.off('game-state-updated', handleGameStateUpdated)
+      socket.off('new-game-started', handleNewGameStarted)
+      socket.off('game-reset', handleGameReset)
+      socket.off('player-left', handlePlayerLeft)
+    }
+  }, [playMode, socket])
 
   const checkSeriesWinner = (xWins, oWins, gameMode, totalGamesPlayed) => {
-    if (gameMode === 1) {
-      // Single game - winner is determined by the game itself
-      return null
-    }
-    
-    const neededWins = Math.ceil(gameMode / 2) // 2 for best of 3, 3 for best of 5
-    if (xWins >= neededWins) {
-      return 'X'
-    }
-    if (oWins >= neededWins) {
-      return 'O'
-    }
-    
-    // Check if series is over (all games played)
+    if (gameMode === 1) return null
+    const neededWins = Math.ceil(gameMode / 2)
+    if (xWins >= neededWins) return 'X'
+    if (oWins >= neededWins) return 'O'
     if (totalGamesPlayed >= gameMode) {
       if (xWins > oWins) return 'X'
       if (oWins > xWins) return 'O'
@@ -92,179 +134,92 @@ function App() {
     return null
   }
 
-  const finalizeMove = (updatedSquares, moveType = null, fromIndex = null, toIndex = null) => {
-    // For online mode, emit move to server instead of updating locally
-    if (playMode === 'online' && socket && moveType) {
-      socket.emit('make-move', { moveType, fromIndex, toIndex })
-      return
-    }
-
+  const finalizeMove = (updatedSquares) => {
     setSquares(updatedSquares)
-
     const gameWinner = calculateWinner(updatedSquares)
     if (gameWinner) {
       setWinner(gameWinner)
       setGameOver(true)
       setTokenToMoveIndex(null)
-      
-      // Update series wins
       if (gameWinner === 'X') {
         const newXWins = xWins + 1
         setXWins(newXWins)
-        const totalGames = newXWins + oWins
-        const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, totalGames)
-        if (seriesWin) {
-          setSeriesWinner(seriesWin)
-        }
+        const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, newXWins + oWins)
+        if (seriesWin) setSeriesWinner(seriesWin)
       } else if (gameWinner === 'O') {
         const newOWins = oWins + 1
         setOWins(newOWins)
-        const totalGames = xWins + newOWins
-        const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, totalGames)
-        if (seriesWin) {
-          setSeriesWinner(seriesWin)
-        }
+        const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, xWins + newOWins)
+        if (seriesWin) setSeriesWinner(seriesWin)
       }
       return
     }
-
     if (checkDraw(updatedSquares)) {
       setWinner('draw')
       setGameOver(true)
       setTokenToMoveIndex(null)
-      
-      // Check if series is over after draw
-      const totalGames = xWins + oWins + 1
-      const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, totalGames)
-      if (seriesWin) {
-        setSeriesWinner(seriesWin)
-      }
+      const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, xWins + oWins + 1)
+      if (seriesWin) setSeriesWinner(seriesWin)
       return
     }
-
     setXIsNext((prev) => !prev)
     setTokenToMoveIndex(null)
   }
 
-  // Reset computer thinking state when it's no longer computer's turn
+  // Computer AI Logic
   useEffect(() => {
-    if (!isComputerTurn) {
-      setIsComputerThinking(false)
-      isProcessingMoveRef.current = false
-    }
-  }, [isComputerTurn])
-
-  // Handle computer moves
-  useEffect(() => {
-    // Only run if it's computer's turn, not already processing, not relocating, and game not over
-    if (!isComputerTurn || isProcessingMoveRef.current || isRelocating || gameOver || !difficulty) {
-      return
-    }
-    
-    // Mark that we're processing a move
-    isProcessingMoveRef.current = true
+    if (!isComputerTurn || isComputerThinking || isRelocating || gameOver || !difficulty) return
     setIsComputerThinking(true)
-    
-    // Add a small delay to make the computer move feel more natural
-    moveTimerRef.current = setTimeout(() => {
-      try {
-        const currentSquares = squaresRef.current // Use ref to get latest squares
-        const move = getComputerMove(currentSquares, 'O', difficulty)
-        
-        if (move) {
-          if (move.type === 'place') {
-            // Place a new token
-            const newSquares = [...currentSquares]
-            newSquares[move.to] = 'O'
-            finalizeMove(newSquares)
-          } else {
-            // Computer is moving a token - first pick it up
-            setTokenToMoveIndex(move.from)
-            const newSquares = [...currentSquares]
-            newSquares[move.from] = null
-            setSquares(newSquares)
-            
-            // Then place it after a short delay
-            setTimeout(() => {
-              const finalSquares = [...newSquares]
-              finalSquares[move.to] = 'O'
-              finalizeMove(finalSquares)
-            }, 300)
-          }
+    const timer = setTimeout(() => {
+      const currentSquares = squares
+      const move = getComputerMove(currentSquares, 'O', difficulty)
+      if (move) {
+        if (move.type === 'place') {
+          const newSquares = [...currentSquares]
+          newSquares[move.to] = 'O'
+          finalizeMove(newSquares)
         } else {
-          // No valid move found - reset thinking state
-          setIsComputerThinking(false)
-          isProcessingMoveRef.current = false
+          setTokenToMoveIndex(move.from)
+          const newSquares = [...currentSquares]
+          newSquares[move.from] = null
+          setSquares(newSquares)
+          setTimeout(() => {
+            const finalSquares = [...newSquares]
+            finalSquares[move.to] = 'O'
+            finalizeMove(finalSquares)
+          }, 300)
         }
-      } catch (error) {
-        console.error('Error in computer move:', error)
+      } else {
         setIsComputerThinking(false)
-        isProcessingMoveRef.current = false
       }
-      moveTimerRef.current = null
-    }, 500) // 500ms delay for better UX
-    
-    return () => {
-      if (moveTimerRef.current) {
-        clearTimeout(moveTimerRef.current)
-        moveTimerRef.current = null
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isComputerTurn, isRelocating, gameOver, difficulty])
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [isComputerTurn, isComputerThinking, isRelocating, gameOver, difficulty])
 
   const handleSquareClick = (index) => {
-    if (gameOver || isComputerTurn || (playMode === 'online' && !isMyTurn)) {
-      return
-    }
+    if (gameOver || isComputerTurn) return
+
+    // Online Check: Must be your turn
+    if (playMode === 'online' && currentPlayer !== onlinePlayerSymbol) return
 
     const valueAtIndex = squares[index]
+    const newSquares = [...squares]
 
-    // CRITICAL: In online mode, always check server state (tokenToMoveIndex) to determine if relocating
-    // The local state might be out of sync, so we must trust the server state
-    const isActuallyRelocating = playMode === 'online' 
-      ? tokenToMoveIndex !== null  // Use current state (synced from server)
-      : isRelocating
-
-    // If relocating, handle placement or switching tokens
-    if (isActuallyRelocating) {
-      // Allow switching to a different token of the same player
-      if (valueAtIndex === currentPlayer) {
-        // Validate using centralized rules
-        const validation = canPickupToken(squares, currentPlayer, index)
-        if (!validation.valid) {
-          console.warn('Cannot switch token:', validation.error)
-          return
-        }
-        
-        // For online mode: emit to server and wait for state update
-        if (playMode === 'online' && socket) {
-          // First cancel current relocation
-          socket.emit('make-move', { moveType: 'cancel-relocate', fromIndex: tokenToMoveIndex, toIndex: null })
-          // Then pick up new token
-          socket.emit('make-move', { moveType: 'pickup', fromIndex: index, toIndex: null })
-        } else {
-          // Offline mode: update immediately
-          const newSquares = [...squares]
-          newSquares[tokenToMoveIndex] = currentPlayer
-          newSquares[index] = null
-          setSquares(newSquares)
-          setTokenToMoveIndex(index)
-        }
-        return
+    // Online Emission Helper
+    const emitMove = (type, from, to) => {
+      if (playMode === 'online' && socket) {
+        socket.emit('make-move', { moveType: type, fromIndex: from, toIndex: to })
       }
+    }
 
-      // Can only place on empty squares
-      if (valueAtIndex !== null) {
-        return
-      }
+    if (isRelocating) {
+      if (valueAtIndex !== null) return
 
-      // If placing token in the same location, cancel relocation without switching turns
+      // Cancel Selection (Same Token Clicked)
       if (index === tokenToMoveIndex) {
-        if (playMode === 'online' && socket) {
-          socket.emit('make-move', { moveType: 'cancel-relocate', fromIndex: tokenToMoveIndex, toIndex: null })
+        if (playMode === 'online') {
+          emitMove('cancel-relocate', index, null) // Optimistic update handled by server response
         } else {
-          const newSquares = [...squares]
           newSquares[index] = currentPlayer
           setSquares(newSquares)
           setTokenToMoveIndex(null)
@@ -272,72 +227,24 @@ function App() {
         return
       }
 
-      // Validate relocation using centralized rules
-      const validation = canRelocateToken(squares, currentPlayer, tokenToMoveIndex, index, tokenToMoveIndex)
-      if (!validation.valid) {
-        console.warn('Cannot relocate:', validation.error)
-        return
-      }
+      if (!isAdjacent(tokenToMoveIndex, index)) return
 
-      // For online mode: emit to server and wait for state update
-      if (playMode === 'online' && socket) {
-        socket.emit('make-move', { moveType: 'relocate', fromIndex: tokenToMoveIndex, toIndex: index })
+      if (playMode === 'online') {
+        emitMove('relocate', tokenToMoveIndex, index)
       } else {
-        // Offline mode: apply move immediately
-        const result = validateAndApplyMove(squares, 'relocate', currentPlayer, tokenToMoveIndex, index, tokenToMoveIndex)
-        if (result.valid) {
-          setSquares(result.squares)
-          setTokenToMoveIndex(result.tokenToMoveIndex)
-          if (result.shouldSwitchTurn) {
-            setXIsNext((prev) => !prev)
-          }
-          // Check for winner/draw
-          const winner = calculateWinner(result.squares)
-          if (winner) {
-            setWinner(winner)
-            setGameOver(true)
-            setTokenToMoveIndex(null)
-            if (winner === 'X') {
-              const newXWins = xWins + 1
-              setXWins(newXWins)
-              const totalGames = newXWins + oWins
-              const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, totalGames)
-              if (seriesWin) setSeriesWinner(seriesWin)
-            } else {
-              const newOWins = oWins + 1
-              setOWins(newOWins)
-              const totalGames = xWins + newOWins
-              const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, totalGames)
-              if (seriesWin) setSeriesWinner(seriesWin)
-            }
-          } else if (checkDraw(result.squares)) {
-            setWinner('draw')
-            setGameOver(true)
-            setTokenToMoveIndex(null)
-            const totalGames = xWins + oWins + 1
-            const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, totalGames)
-            if (seriesWin) setSeriesWinner(seriesWin)
-          }
-        }
+        newSquares[index] = currentPlayer
+        finalizeMove(newSquares)
       }
       return
     }
 
-    // Allow clicking on your own tokens to move them (at any time)
+    // Pick up token to relocate
     if (valueAtIndex === currentPlayer) {
-      // Validate using centralized rules
-      const validation = canPickupToken(squares, currentPlayer, index)
-      if (!validation.valid) {
-        console.warn('Cannot pick up token:', validation.error)
-        return
-      }
+      if (!canTokenMove(squares, index)) return
 
-      // For online mode: emit to server and wait for state update (DO NOT update locally)
-      if (playMode === 'online' && socket) {
-        socket.emit('make-move', { moveType: 'pickup', fromIndex: index, toIndex: null })
+      if (playMode === 'online') {
+        emitMove('pickup', index, null)
       } else {
-        // Offline mode: update immediately
-        const newSquares = [...squares]
         newSquares[index] = null
         setSquares(newSquares)
         setTokenToMoveIndex(index)
@@ -345,75 +252,18 @@ function App() {
       return
     }
 
-    // Can only place on empty squares
-    if (valueAtIndex !== null) {
-      return
-    }
+    // Place new token
+    if (valueAtIndex !== null || !canPlaceNewToken) return
 
-    // CRITICAL: In online mode, if we're relocating (tokenToMoveIndex is set), we should NOT be here
-    // This is a safety check to prevent sending 'place' when we should be sending 'relocate'
-    if (playMode === 'online' && tokenToMoveIndex !== null) {
-      console.warn('[handleSquareClick] Attempted to place token while relocating. This should not happen. Current tokenToMoveIndex:', tokenToMoveIndex)
-      // Don't send the move - the server will reject it anyway
-      return
-    }
-
-    // Validate placement using centralized rules
-    const validation = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
-    if (!validation.valid) {
-      console.warn('Cannot place token:', validation.error)
-      // In online mode, show the error to user since server will reject it
-      if (playMode === 'online' && socket) {
-        // The server will send an error, but we can prevent the invalid move
-        return
-      }
-      return
-    }
-
-    // For online mode: emit to server and wait for state update (DO NOT update locally)
-    if (playMode === 'online' && socket) {
-      socket.emit('make-move', { moveType: 'place', fromIndex: null, toIndex: index })
+    if (playMode === 'online') {
+      emitMove('place', null, index)
     } else {
-      // Offline mode: apply move immediately
-      const result = validateAndApplyMove(squares, 'place', currentPlayer, null, index, tokenToMoveIndex)
-      if (result.valid) {
-        setSquares(result.squares)
-        setTokenToMoveIndex(result.tokenToMoveIndex)
-        if (result.shouldSwitchTurn) {
-          setXIsNext((prev) => !prev)
-        }
-        // Check for winner/draw
-        const winner = calculateWinner(result.squares)
-        if (winner) {
-          setWinner(winner)
-          setGameOver(true)
-          setTokenToMoveIndex(null)
-          if (winner === 'X') {
-            const newXWins = xWins + 1
-            setXWins(newXWins)
-            const totalGames = newXWins + oWins
-            const seriesWin = checkSeriesWinner(newXWins, oWins, gameMode, totalGames)
-            if (seriesWin) setSeriesWinner(seriesWin)
-          } else {
-            const newOWins = oWins + 1
-            setOWins(newOWins)
-            const totalGames = xWins + newOWins
-            const seriesWin = checkSeriesWinner(xWins, newOWins, gameMode, totalGames)
-            if (seriesWin) setSeriesWinner(seriesWin)
-          }
-        } else if (checkDraw(result.squares)) {
-          setWinner('draw')
-          setGameOver(true)
-          setTokenToMoveIndex(null)
-          const totalGames = xWins + oWins + 1
-          const seriesWin = checkSeriesWinner(xWins, oWins, gameMode, totalGames)
-          if (seriesWin) setSeriesWinner(seriesWin)
-        }
-      }
+      newSquares[index] = currentPlayer
+      finalizeMove(newSquares)
     }
   }
 
-  const handleGameStart = (newPlayMode, mode, startingPlayer, newDifficulty, onlineRoomId = null, onlineSocket = null, onlinePlayerSymbol = null) => {
+  const handleGameStart = (newPlayMode, mode, startingPlayer, newDifficulty, newRoomId, newSocket, symbol) => {
     setPlayMode(newPlayMode)
     setDifficulty(newDifficulty)
     setGameMode(mode)
@@ -423,141 +273,17 @@ function App() {
     setXWins(0)
     setOWins(0)
     setSeriesWinner(null)
-    
-    // Handle online mode
+
+    // Online specific setup
     if (newPlayMode === 'online') {
-      // Clean up existing socket listeners before setting up new ones
-      if (socket && socket._gameHandlers) {
-        Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
-          socket.off(event, handler)
-        })
-        delete socket._gameHandlers
-      }
-      
-      setSocket(onlineSocket)
-      setRoomId(onlineRoomId)
-      setPlayerSymbol(onlinePlayerSymbol)
-      
-      // Set up socket event listeners with named handlers for proper cleanup
-      if (onlineSocket) {
-        const handleGameStateUpdated = ({ gameState }) => {
-          setSquares(gameState.squares)
-          setXIsNext(gameState.xIsNext)
-          setWinner(gameState.winner)
-          setGameOver(gameState.gameOver)
-          setTokenToMoveIndex(gameState.tokenToMoveIndex)
-          setCurrentGame(gameState.currentGame)
-          setXWins(gameState.xWins)
-          setOWins(gameState.oWins)
-          setSeriesWinner(gameState.seriesWinner)
-        }
-        
-        const handleNewGameStarted = ({ gameState }) => {
-          setSquares(gameState.squares)
-          setXIsNext(gameState.xIsNext)
-          setWinner(gameState.winner)
-          setGameOver(gameState.gameOver)
-          setTokenToMoveIndex(gameState.tokenToMoveIndex)
-          setCurrentGame(gameState.currentGame)
-        }
-        
-        const handleGameReset = ({ gameState }) => {
-          setSquares(gameState.squares)
-          setXIsNext(gameState.xIsNext)
-          setWinner(gameState.winner)
-          setGameOver(gameState.gameOver)
-          setTokenToMoveIndex(gameState.tokenToMoveIndex)
-        }
-        
-        const handlePlayerLeft = () => {
-          alert('Your opponent has left the game. Returning to menu.')
-          handleReturnToMenu()
-        }
-        
-        const handleError = ({ message }) => {
-          console.error('[App] Socket error:', message);
-          // Handle "Not in a room" errors - this can happen if socket reconnects
-          if (message.includes('Not in a room') || message.includes('Room not found') || message.includes('Player not found')) {
-            console.warn('[App] Socket lost room association. This may be a reconnection issue.');
-            // Show a less intrusive message
-            console.error(`Connection issue: ${message}. Please refresh the page if this persists.`);
-            // Don't show alert for these - they're often transient reconnection issues
-            return;
-          }
-          alert(`Error: ${message}`)
-        }
-        
-        onlineSocket.on('game-state-updated', handleGameStateUpdated)
-        onlineSocket.on('new-game-started', handleNewGameStarted)
-        onlineSocket.on('game-reset', handleGameReset)
-        onlineSocket.on('player-left', handlePlayerLeft)
-        onlineSocket.on('error', handleError)
-        
-        // Store handlers for cleanup
-        onlineSocket._gameHandlers = {
-          'game-state-updated': handleGameStateUpdated,
-          'new-game-started': handleNewGameStarted,
-          'game-reset': handleGameReset,
-          'player-left': handlePlayerLeft,
-          'error': handleError,
-        }
-      }
+      setRoomId(newRoomId)
+      setSocket(newSocket)
+      setOnlinePlayerSymbol(symbol)
+      // Game state will be synced via socket events
     } else {
-      // Clean up socket if switching from online mode
-      if (socket) {
-        // Remove all game-related listeners
-        if (socket._gameHandlers) {
-          Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
-            socket.off(event, handler)
-          })
-          delete socket._gameHandlers
-        }
-        disconnectSocket()
-        setSocket(null)
-        setRoomId(null)
-        setPlayerSymbol(null)
-      }
+      startNewGame(startingPlayer)
     }
-    
-    startNewGame(startingPlayer)
   }
-  
-  const handleReturnToMenu = () => {
-    if (socket) {
-      // Clean up all game-related listeners
-      if (socket._gameHandlers) {
-        Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
-          socket.off(event, handler)
-        })
-        delete socket._gameHandlers
-      }
-      disconnectSocket()
-      setSocket(null)
-    }
-    setRoomId(null)
-    setPlayerSymbol(null)
-    setPlayMode(null)
-    setDifficulty(null)
-    setGameMode(null)
-    setSeriesStartingPlayer(null)
-    setShowSetup(true)
-    setCurrentGame(1)
-    setXWins(0)
-    setOWins(0)
-    setSeriesWinner(null)
-  }
-  
-  // Cleanup socket listeners on unmount
-  useEffect(() => {
-    return () => {
-      if (socket && socket._gameHandlers) {
-        Object.entries(socket._gameHandlers).forEach(([event, handler]) => {
-          socket.off(event, handler)
-        })
-        delete socket._gameHandlers
-      }
-    }
-  }, [socket])
 
   const startNewGame = (startingPlayer) => {
     setSquares(Array(9).fill(null))
@@ -569,22 +295,16 @@ function App() {
 
   const handleNextGame = () => {
     if (seriesWinner || (gameMode === 1 && gameOver)) {
-      // Series is over, or single game is over - go back to setup
-      handleReturnToMenu()
+      handleBackToSetup()
     } else {
-      // Continue series - alternate starting player
-      // After game 1 (odd): next game should start with opposite
-      // After game 2 (even): next game should start with original
-      // So: if currentGame is odd, next uses opposite; if even, next uses original
-      const nextGameNumber = currentGame + 1
-      const shouldStartWithOriginal = nextGameNumber % 2 === 1
-      const nextStartingPlayer = shouldStartWithOriginal 
-        ? seriesStartingPlayer 
-        : (seriesStartingPlayer === 'X' ? 'O' : 'X')
-      
-      if (playMode === 'online' && socket) {
+      if (playMode === 'online') {
         socket.emit('start-new-game')
       } else {
+        const nextGameNumber = currentGame + 1
+        const shouldStartWithOriginal = nextGameNumber % 2 === 1
+        const nextStartingPlayer = shouldStartWithOriginal
+          ? seriesStartingPlayer
+          : (seriesStartingPlayer === 'X' ? 'O' : 'X')
         setCurrentGame(nextGameNumber)
         startNewGame(nextStartingPlayer)
       }
@@ -592,100 +312,133 @@ function App() {
   }
 
   const handleReset = () => {
-    // Reset current game only
-    if (playMode === 'online' && socket) {
+    if (playMode === 'online') {
       socket.emit('reset-game')
     } else {
       startNewGame(xIsNext ? 'X' : 'O')
     }
   }
 
-  if (showSetup) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-        {playMode === 'online' ? (
-          <OnlineGameSetup 
-            onStart={handleGameStart} 
-            onCancel={() => {
-              setPlayMode(null)
-              if (socket) {
-                disconnectSocket()
-                setSocket(null)
-              }
-            }}
-          />
-        ) : (
-          <GameSetup 
-            onStart={handleGameStart} 
-            onOnlineSelect={() => setPlayMode('online')}
-          />
-        )}
-      </div>
-    )
+  const handleBackToSetup = () => {
+    setShowSetup(true)
+    setPlayMode(null)
+    setDifficulty(null)
+    setGameMode(null)
+    setSeriesStartingPlayer(null)
+    setCurrentGame(1)
+    setXWins(0)
+    setOWins(0)
+    setSeriesWinner(null)
+    setRoomId(null)
+    setSocket(null)
+    setOnlinePlayerSymbol(null)
+    setSquares(Array(9).fill(null))
+    setWinner(null)
+    setGameOver(false)
+    setTokenToMoveIndex(null)
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-md flex flex-col items-center">
-        <div className="flex items-center justify-between w-full mb-6 sm:mb-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white text-shadow-glow">
-            ShiftTacToe
-          </h1>
-          <button
-            onClick={() => setShowHelp(true)}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full glass hover:glass-strong text-white font-bold text-xl sm:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out hover:scale-105"
-            aria-label="Show help and rules"
-          >
-            ?
-          </button>
-        </div>
-        <GameStatus
-          currentPlayer={currentPlayer}
-          winner={winner}
-          gameOver={gameOver}
-          isRelocating={isRelocating}
-          canPlaceNewToken={canPlaceNewTokenValid}
-          currentPlayerTokenCount={currentPlayerTokenCount}
-          tokenLimit={TOKEN_LIMIT}
-          gameMode={gameMode}
-          currentGame={currentGame}
-          xWins={xWins}
-          oWins={oWins}
-          seriesWinner={seriesWinner}
-          isComputerTurn={isComputerTurn}
-          isComputerThinking={isComputerThinking}
-        />
-        {playMode === 'online' && roomId && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-            <p className="text-sm font-semibold text-gray-700 mb-1">
-              Room ID: <span className="font-mono font-bold text-blue-600 text-lg">{roomId}</span>
-            </p>
-            <p className="text-xs text-gray-600">
-              You are playing as: <span className="font-bold text-lg">{playerSymbol}</span>
-            </p>
-          </div>
-        )}
-        <Board
-          squares={squares}
-          onSquareClick={handleSquareClick}
-          gameOver={gameOver}
-          currentPlayer={currentPlayer}
-          currentPlayerTokenCount={currentPlayerTokenCount}
-          tokenToMoveIndex={tokenToMoveIndex}
-          tokenLimit={TOKEN_LIMIT}
-          canTokenMove={canTokenMove}
-          isAdjacent={isAdjacent}
-          isComputerTurn={isComputerTurn || (playMode === 'online' && !isMyTurn)}
-        />
-        <NewGameButton
-          onReset={handleReset}
-          onNextGame={handleNextGame}
-          gameOver={gameOver}
-          seriesWinner={seriesWinner}
-          gameMode={gameMode}
-        />
+    <div className="min-h-screen bg-navy-900 text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Ambient Effects */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-glow/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[100px]" />
       </div>
-      <Help isOpen={showHelp} onClose={() => setShowHelp(false)} />
+
+      <AnimatePresence mode="wait">
+        {showSetup ? (
+          <motion.div
+            key="setup"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="z-10 w-full flex justify-center"
+          >
+            {/* If playMode is online, show Online Setup, else show Main Setup */}
+            {playMode === 'online' ? (
+              <OnlineGameSetup onStart={handleGameStart} onCancel={() => setPlayMode(null)} />
+            ) : (
+              <GameSetup onStart={(...args) => {
+                // Intercept 'online' selection to trigger OnlineGameSetup view next
+                if (args[0] === 'online') {
+                  setPlayMode('online')
+                } else {
+                  handleGameStart(...args)
+                }
+              }} />
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="game"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md flex flex-col items-center z-10"
+          >
+            {/* Header / Title */}
+            <div className="mb-6 text-center">
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-300 drop-shadow-sm">
+                ShiftTacToe
+              </h1>
+              {playMode === 'online' && (
+                <div className="text-xs text-blue-300/60 mt-1 flex items-center justify-center gap-2">
+                  <span>Room: {roomId}</span>
+                  <span className="w-1 h-1 bg-white/20 rounded-full" />
+                  <span>You: {onlinePlayerSymbol}</span>
+                </div>
+              )}
+            </div>
+
+            <GameStatus
+              currentPlayer={currentPlayer}
+              winner={winner}
+              gameOver={gameOver}
+              isRelocating={isRelocating}
+              canPlaceNewToken={canPlaceNewToken}
+              currentPlayerTokenCount={currentPlayerTokenCount}
+              tokenLimit={TOKEN_LIMIT}
+              gameMode={gameMode}
+              currentGame={currentGame}
+              xWins={xWins}
+              oWins={oWins}
+              seriesWinner={seriesWinner}
+              isComputerTurn={isComputerTurn}
+              isComputerThinking={isComputerThinking}
+              playMode={playMode}
+              onlinePlayerSymbol={onlinePlayerSymbol}
+            />
+
+            <Board
+              squares={squares}
+              onSquareClick={handleSquareClick}
+              gameOver={gameOver}
+              currentPlayer={currentPlayer}
+              currentPlayerTokenCount={currentPlayerTokenCount}
+              tokenToMoveIndex={tokenToMoveIndex}
+              tokenLimit={TOKEN_LIMIT}
+              canTokenMove={canTokenMove}
+              isAdjacent={isAdjacent}
+              isComputerTurn={isComputerTurn}
+              // Online props
+              playMode={playMode}
+              isOnlineTurn={isOnlineTurn}
+              onlinePlayerSymbol={onlinePlayerSymbol}
+            />
+
+            <NewGameButton
+              onReset={handleReset}
+              onNextGame={handleNextGame}
+              // Add explicit Back handler for Online mode or general exit
+              onBack={handleBackToSetup}
+              gameOver={gameOver}
+              seriesWinner={seriesWinner}
+              gameMode={gameMode}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

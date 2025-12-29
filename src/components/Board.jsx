@@ -1,5 +1,4 @@
-import Square from './Square'
-import { TOKEN_LIMIT, countTokens, canTokenMove, isAdjacent, canPlaceNewToken } from '../utils/gameRules'
+import Square from './Square';
 
 function Board({
   squares,
@@ -13,69 +12,76 @@ function Board({
   isAdjacent,
   isComputerTurn,
 }) {
-  const isRelocating = tokenToMoveIndex !== null
+  const isRelocating = tokenToMoveIndex !== null;
 
-  const isSquareEnabled = (value, index) => {
+  // New Helper to determine exact state of each square
+  const getSquareState = (value, index) => {
+    // 1. Game Over or Computer Turn -> All disabled
     if (gameOver || isComputerTurn) {
-      return false
+      return { disabled: true, isSelected: false, isValidDestination: false };
     }
 
-    // When relocating, allow placing on empty adjacent squares OR switching to another token
+    // 2. Reloaction Phase
     if (isRelocating) {
-      // Allow switching to a different token of the same player (if it can move)
-      // Players can move tokens at any time, not just when at token limit
-      if (value === currentPlayer) {
-        return canTokenMove(squares, index)
+      // If this is the token being moved
+      if (index === tokenToMoveIndex) {
+        return { disabled: false, isSelected: true, isValidDestination: false }; // Can click to cancel
       }
-      // Enable empty squares if adjacent to the token being moved OR it's the original location
+
+      // If this is an empty square, check if it's a valid move target (adjacent)
       if (value === null) {
-        return isAdjacent(tokenToMoveIndex, index) || index === tokenToMoveIndex
+        const isTarget = isAdjacent(tokenToMoveIndex, index);
+        return {
+          disabled: !isTarget,
+          isSelected: false,
+          isValidDestination: isTarget
+        };
       }
-      return false
+
+      // Other tokens cannot be interacted with during relocation
+      return { disabled: true, isSelected: false, isValidDestination: false };
     }
 
-    // Empty squares are enabled if player can place new tokens (using centralized rules)
+    // 3. Normal Placement Phase (Pre-limit)
     if (value === null) {
-      const validation = canPlaceNewToken(squares, currentPlayer, tokenToMoveIndex)
-      return validation.valid
+      const canPlace = currentPlayerTokenCount < tokenLimit;
+      return { disabled: !canPlace, isSelected: false, isValidDestination: false };
     }
 
-    // Player's own tokens are enabled if they can move (at any time)
+    // 4. Selection Phase (for Relocation)
     if (value === currentPlayer) {
-      return canTokenMove(squares, index)
+      const canMove = canTokenMove(squares, index);
+      return { disabled: !canMove, isSelected: false, isValidDestination: false };
     }
 
-    // Opponent's tokens are never enabled
-    return false
-  }
+    // Opponent tokens
+    return { disabled: true, isSelected: false, isValidDestination: false };
+  };
 
   return (
     <div
-      className="grid grid-cols-3 gap-3 w-full max-w-xs sm:max-w-sm md:max-w-md"
+      className="grid grid-cols-3 gap-3 p-4 bg-navy-900/50 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-sm"
       role="grid"
-      aria-label="ShiftTacToe game board"
+      aria-label="Tic-tac-toe game board"
     >
       {squares.map((value, index) => {
-        const enabled = isSquareEnabled(value, index)
-        const isRelocatingSquare = tokenToMoveIndex === index
-        const isRelocating = tokenToMoveIndex !== null
+        const { disabled, isSelected, isValidDestination } = getSquareState(value, index);
+
         return (
-          <div key={index} className="relative">
-            {isRelocatingSquare && (
-              <div className="absolute inset-0 rounded-xl glow-mystical animate-pulse-slow pointer-events-none" />
-            )}
-            <Square
-              value={value}
-              onClick={() => enabled && onSquareClick(index)}
-              disabled={!enabled}
-              index={index}
-            />
-          </div>
-        )
+          <Square
+            key={index}
+            value={value}
+            onClick={() => !disabled && onSquareClick(index)}
+            disabled={disabled}
+            index={index}
+            isRelocating={isRelocating}
+            isSelected={isSelected}
+            isValidDestination={isValidDestination}
+          />
+        );
       })}
     </div>
-  )
+  );
 }
 
-export default Board
-
+export default Board;
