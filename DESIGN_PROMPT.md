@@ -6,7 +6,7 @@ ShiftTacToe is a strategic variant of Tic-Tac-Toe where players can move their t
 - **Game Modes**: Single game, Best of 3, Best of 5
 - **Play Modes**: 2-Player Offline, VS Computer (Easy/Hard/Insane), Online Multiplayer
 - **Tokens**: Red X (pulses subtly) and Blue O (rotates slowly)
-- **Platform**: Web-first (React + Tailwind CSS), mobile-ready for future migration
+- **Platform**: Mobile-first implementation with future-proof web version in mind (React + Tailwind CSS)
 
 ## Design Philosophy
 
@@ -25,10 +25,10 @@ Create a **simplistic yet mystical** design that feels:
 ### 1. Color Palette
 
 **Primary Colors:**
-- **Background**: Soft gradient or solid color with mystical quality (consider: deep navy with subtle purple undertones, or warm off-white with slight blue tint)
-- **Surface/Cards**: Elevated surfaces with subtle shadows and slight transparency/glassmorphism
-- **Text Primary**: High contrast for readability (near-black or pure white depending on background)
-- **Text Secondary**: Muted tones for less important information
+- **Background**: Deep navy with subtle purple undertones (primary). Alternatively, warm off-white with blue tint for mystical quality, but deep navy is primary for current designs.
+- **Surface/Cards**: Elevated glassmorphism with subtle transparency and soft shadows
+- **Text Primary**: High contrast for readability (pure white for dark backgrounds, near-black for light backgrounds)
+- **Text Secondary**: Muted tones for less important information (14px, reduced opacity)
 
 **Token Colors (Fixed):**
 - **X Token**: Red (#dc2626) - solid filled, pulses subtly
@@ -73,108 +73,70 @@ Create a **simplistic yet mystical** design that feels:
 - **Tablet**: 640px - 1024px - Optimized for medium screens
 - **Desktop**: > 1024px - Full layout with optimal spacing
 
-### 4. Components to Design
+### 4. Components to Design (Mobile-First)
 
-#### A. Home/Setup Screen (GameSetup.jsx)
-**Elements:**
-- Game title "ShiftTacToe" with mystical styling
-- Subtitle/tagline
-- Play mode selection (3 buttons: 2 Player, VS Computer, Online)
-- Difficulty selection (for VS Computer: Easy, Hard, Insane)
-- Game mode selection (Single Game, Best of 3, Best of 5)
-- Starting player selection (X or O tokens)
-- Start game button
-- Help/Instructions button
+#### 1. ShiftTacToe Welcome/Home Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
 
-**Design Requirements:**
-- Clean, centered layout
-- Progressive disclosure (show options as user selects)
-- Smooth transitions between selection states
-- Token previews with animations
-- Mystical glow on selected options
-- Clear visual hierarchy
+**Description:** A centered home/setup screen for 'ShiftTacToe'. The title 'ShiftTacToe' is prominently displayed with mystical styling (48-64px), centered on a deep navy background with subtle purple undertones. It features a prominent 'Start New Game' button and a 'Settings' button, both as glassmorphism cards with soft blue/purple mystical glows, adhering to the 44x44px touch-friendly minimum. Buttons should have hover/active states with subtle scaling (1.02-1.05) and glow increase. All transitions between selections are smooth (200-400ms, ease-in-out). Text is high contrast (pure white, Inter/Poppins style, 16px body).
 
-#### B. Game Board (Board.jsx + Square.jsx)
-**Elements:**
-- 3x3 grid of squares
-- Tokens (animated X and O)
-- Visual feedback for:
-  - Enabled squares (hoverable, clickable)
-  - Disabled squares (grayed out)
-  - Token being relocated (highlighted, glowing)
-  - Valid move destinations (subtle highlight/glow)
-  - Invalid moves (visual feedback)
+**Mobile Navigation:** ["Home", "Play", "Settings"]
 
-**Design Requirements:**
-- Clean grid with subtle borders or shadows
-- Squares with rounded corners (modern feel)
-- Smooth hover effects (scale, glow, color shift)
-- Clear visual distinction between states
-- Mystical glow on interactive elements
-- Smooth token placement/movement animations
-- Board should feel like a sacred game space
+#### 2. ShiftTacToe Game Setup Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
 
-#### C. Game Status Display (GameStatus.jsx)
-**Elements:**
-- Current player indicator
-- Game status message (turn, win, draw, relocating)
-- Series score (for Best of 3/5)
-- Token counts
-- Computer thinking indicator
+**Description:** A game setup screen for 'ShiftTacToe'. Users choose between single-player ('VS Computer') and multiplayer ('2 Player') modes using glassmorphism card buttons. The design maintains the deep navy background with subtle purple undertones. Progressive disclosure is used for 'Difficulty' (Easy/Hard/Insane), 'Game Mode' (Single/Best of 3/Best of 5) when 'VS Computer' is chosen, or 'Starting Player' (X/O tokens with animations: Red X pulsing, Blue O slowly rotating) when '2 Player' is chosen. Selected states have an enhanced glow and gentle pulse. A 'Start Game' button with a mystical glow (soft blue/purple) at the bottom. Typography is clean (Inter/Poppins style, 16px body, 14px secondary) and high contrast. Smooth transitions (200-400ms) for all interactive elements.
 
-**Design Requirements:**
-- Prominent but not overwhelming
-- Clear hierarchy of information
-- Animated token indicators
-- Smooth transitions when status changes
-- Mystical styling for important messages (wins, series completion)
-- Elegant score display
+**Mobile Navigation:** ["Home", "Play", "Settings"]
 
-#### D. Online Game Setup (OnlineGameSetup.jsx)
-**Elements:**
-- Create room button
-- Join room input and button
-- Room ID display
-- Connection status indicator
-- Waiting for player message
-- Player ready indicators
-- Back button
+#### 3. ShiftTacToe Game Board Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
 
-**Design Requirements:**
-- Clean, focused interface
-- Clear connection status (connected/disconnected with mystical indicators)
-- Smooth loading states
-- Elegant room ID display (copyable, styled)
-- Waiting animations (subtle pulse, shimmer)
-- Consistent with main setup screen
+**Description:** A 3x3 game board for 'ShiftTacToe'. The main 3x3 grid is clean and modern with rounded corners, subtle borders, and layered soft shadows, giving it a sacred game space feel. Squares are elevated glassmorphism surfaces. Hover/tap effects on squares involve a subtle scale (1.05) and glow increase. Token X (solid red #dc2626) is placed with a scale 0->1 bounce and fade-in with glow (300-400ms) and has a continuous subtle pulse. Token O (solid blue #2563eb) is placed with similar animation and has a slow rotation (3s per rotation). Token movement is a smooth slide with a slight arc and glow trail (400-500ms). Visual states for squares: Enabled (subtle pulse/glow), Disabled (muted), Relocating (highlighted), Valid destinations (subtle highlight). Background is deep navy with subtle purple undertones.
 
-#### E. Help/Instructions (Help.jsx)
-**Elements:**
-- Game rules explanation
-- How to play instructions
-- Visual examples (if possible)
-- Close button
+**Mobile Navigation:** ["Game", "History", "Settings"] (Note: Navigation items adapted to context of playing game)
 
-**Design Requirements:**
-- Modal or slide-in panel
-- Easy to read, well-structured
-- Mystical styling consistent with game
-- Smooth open/close animations
-- Clear typography hierarchy
+#### 4. ShiftTacToe Game End Results Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
 
-#### F. Navigation & Actions
-**Elements:**
-- New game button
-- Back to setup button
-- Help button
-- Series reset (if applicable)
+**Description:** A game end/results screen for 'ShiftTacToe'. It elegantly displays the game's outcome (Win, Lose, Draw) using prominent (48-64px) high-contrast text against the deep navy background with subtle purple undertones. Win celebrations include an enhanced glow, pulse, and subtle particle effects. Options to 'Play Again' and 'Return to Home Screen' are presented as glassmorphism card buttons with soft blue/purple mystical glows, adhering to touch-friendly sizes. All transitions are smooth (200-400ms, ease-in-out). Typography is clean (Inter/Poppins style, 16px body) and high contrast.
 
-**Design Requirements:**
-- Consistent button styling throughout
-- Clear hover/active states
-- Smooth transitions
-- Mystical glow on primary actions
-- Accessible and touch-friendly
+**Mobile Navigation:** ["Home", "Play", "Settings"]
+
+#### 5. ShiftTacToe Online Setup Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
+
+**Description:** An Online Setup screen for 'ShiftTacToe'. It should feature a clean, modern interface with a deep navy background and subtle purple undertones. Prominent glassmorphism cards for 'Create Room' and 'Join Room' actions, both with soft blue/purple mystical glows and touch-friendly dimensions. Below these, a connection status indicator with mystical visual cues (e.g., subtle pulsing icons or shimmering text). When a room is created, a copyable Room ID is displayed in an elegant, styled manner, perhaps within a glassmorphism field. Waiting animations for connecting or waiting for a player should be subtle (e.g., gentle pulse or shimmer effect on relevant elements). Text is high contrast (pure white, Inter/Poppins style, 16px body, 14px secondary) with clear hierarchy. Smooth transitions (200-400ms) for all interactive elements and status changes.
+
+**Mobile Navigation:** ["Home", "Play", "Settings"]
+
+#### 6. ShiftTacToe Settings Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
+
+**Description:** A Settings screen for 'ShiftTacToe'. It should feature a clean, minimalist layout with a deep navy background and subtle purple undertones. Glassmorphism cards for various settings categories like 'Sound', 'Notifications', 'Account', 'Privacy', and 'About'. Each setting option within a card should be clearly presented with high-contrast text (pure white, Inter/Poppins style, 16px body, 14px secondary) and interactive elements (e.g., toggles, buttons) styled with soft blue/purple mystical glows, touch-friendly. Smooth transitions (200-400ms) for navigating settings and saving changes. Animated subtle mystical accents (e.g., small glowing particles) can be present but not overwhelming.
+
+**Mobile Navigation:** ["Home", "Play", "Settings"]
+
+#### 7. ShiftTacToe Profile Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
+
+**Description:** A Profile screen for 'ShiftTacToe'. It should display user information (e.g., Username, Avatar/Icon, Total Wins, Losses, Draws). The layout should be clean, modern, and centered, using glassmorphism cards for different sections on a deep navy background with subtle purple undertones. The user's avatar could be a subtly animated mystical icon. High-contrast text (pure white, Inter/Poppins style, 16px body) and clear hierarchy. Editable fields should have clear input states and smooth transitions on focus/edit (200-400ms). A 'Logout' button styled as a glassmorphism card with a soft red accent glow for attention.
+
+**Mobile Navigation:** ["Home", "Play", "Settings", "Profile"]
+
+#### 8. ShiftTacToe About/Help Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
+
+**Description:** An About/Help screen for 'ShiftTacToe'. This screen provides information about the game, its rules, credits, and potentially a FAQ or contact support. It should have a clean, scrollable layout with sections organized within glassmorphism cards on a deep navy background with subtle purple undertones. High-contrast, readable text (pure white, Inter/Poppins style, 16px body, 14px secondary) with clear headings (48-64px). Links or expandable sections for rules/FAQ should have soft blue/purple mystical glows on interaction and smooth transitions (200-400ms). The overall feel should be informative yet retain the app's mystical and elegant aesthetic.
+
+**Mobile Navigation:** ["Home", "Play", "Settings"]
+
+#### 9. ShiftTacToe Leaderboard/History Screen
+**Context:** Mobile 'ShiftTacToe' app with a strategic Tic-Tac-Toe variant. Modern, simplistic yet mystical, ethereal aesthetic, minimalist with purposeful details, premium polished feel, enchanting but not overwhelming.
+
+**Description:** A Leaderboard/History screen for 'ShiftTacToe'. This screen displays player rankings (leaderboard) and/or a history of past games. It should feature a clean, organized layout with a deep navy background and subtle purple undertones. Glassmorphism cards can be used for individual player entries or game history items, showing relevant stats (e.g., rank, username, wins, game date, outcome). High-contrast text (pure white, Inter/Poppins style, 16px body, 14px secondary) and clear hierarchy. Interactive elements for filtering or sorting (if applicable) should use soft blue/purple mystical glows and smooth transitions (200-400ms). The screen should feel premium and elegant, reflecting achievements within the mystical game world. An animated mystical element could subtly indicate the user's position on the leaderboard.
+
+**Mobile Navigation:** ["Home", "Play", "Settings", "History"]
 
 ### 5. Animations & Transitions
 
@@ -192,12 +154,16 @@ Create a **simplistic yet mystical** design that feels:
 **Token Placement:**
 - Scale from 0 to 1 with slight bounce (mystical appearance)
 - Fade in with glow effect
+- Subtle background light briefly illuminates square
+- Token actively pulses/rotates upon landing
 - Duration: 300-400ms
 
 **Token Movement:**
 - Smooth slide animation from source to destination
 - Slight arc or curve for elegance
-- Glow trail effect (optional, mystical)
+- Glow trail effect (mystical)
+- Token's inherent animation (pulse/rotation) continues during movement
+- 'Relocating' and 'valid destination' squares have subtle highlights
 - Duration: 400-500ms
 
 **Square Interactions:**
@@ -219,7 +185,11 @@ Create a **simplistic yet mystical** design that feels:
 **Status Updates:**
 - Fade in/out for status messages (300ms)
 - Smooth score updates (count-up animation optional)
-- Win celebration: Enhanced glow, pulse, possible particle effect (subtle)
+- Win celebration: 
+  - Winning line tokens experience enhanced, vibrant glow and accelerated pulse
+  - Shower of subtle, ethereal particles matching token color emanating from tokens, floating upwards and dissipating
+  - Rest of board subtly dims
+  - Game Status display smoothly transitions to winner announcement with prominent, glowing text
 
 **Loading States:**
 - Subtle shimmer or pulse
@@ -228,20 +198,22 @@ Create a **simplistic yet mystical** design that feels:
 
 ### 6. Visual Effects & Details
 
-**Glassmorphism (Optional):**
-- Subtle frosted glass effect on cards/modals
-- Slight transparency with backdrop blur
-- Maintains readability
+**Glassmorphism:**
+- **Application**: Central to all surface elements (buttons, cards, input fields)
+- **Appearance**: Frosted glass effect with subtle transparency and backdrop blur, creating an elevated and ethereal feel
+- **Maintains readability** with high-contrast text
 
-**Shadows & Depth:**
-- Soft, layered shadows for depth
-- Elevated surfaces (cards, buttons)
-- Mystical glow shadows (colored, soft)
+**Shadows:**
+- **Application**: For depth, separation, and mystical ambiance
+- **Appearance**: Soft and layered for depth, making glassmorphism elements appear to float. Mystical glow shadows emanate from active/selected elements
 
-**Gradients (Subtle):**
-- Background gradients (if used, keep subtle)
-- Button gradients (optional, elegant)
-- Token glow gradients
+**Gradients:**
+- **Application**: Primarily for background to establish mood, potentially subtle within UI elements
+- **Appearance**: Deep navy with subtle purple undertones for the main background, possibly with a very gentle, almost imperceptible gradient shift
+
+**Glows:**
+- **Application**: Signature mystical element for interaction states, selections, primary actions, and tokens
+- **Appearance**: Soft, colored glows (soft blue/purple for actions, red for X, blue for O), with interactive intensity increases, pulses, and ethereal aura effects
 
 **Borders & Outlines:**
 - Rounded corners throughout (modern feel)
@@ -250,28 +222,26 @@ Create a **simplistic yet mystical** design that feels:
 
 ### 7. Responsive Design Considerations
 
-**Mobile-First Approach:**
+**Mobile-First (Primary):**
 - Touch-friendly targets (min 44x44px)
 - Adequate spacing for fingers
-- Readable text sizes
+- Readable text sizes (16px body, 14px secondary)
 - Stacked layouts on small screens
 - Optimized board size for mobile screens
+- Native app ready: Design translates well to native mobile UI patterns
 
-**Tablet Optimization:**
-- Balanced layout (not too cramped, not too spread)
+**Tablet:**
+- Balanced layouts, optimal spacing
+- Potential for two-column/side-by-side elements
 - Comfortable touch targets
 - Optimal use of screen space
 
-**Desktop Enhancement:**
+**Desktop (Future):**
+- Generous spacing, full hover states for mouse
+- Robust keyboard navigation
+- Scalable to large resolutions
 - More generous spacing
-- Hover states (not just touch)
-- Keyboard navigation support
 - Larger board if desired
-
-**Future Mobile App Considerations:**
-- Design should translate well to native mobile
-- Consider native mobile patterns (bottom sheets, swipe gestures)
-- Maintain design consistency across platforms
 
 ### 8. Accessibility Requirements
 
